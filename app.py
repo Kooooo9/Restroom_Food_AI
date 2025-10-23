@@ -1,22 +1,16 @@
-import streamlit as st
-from app_eda import run_eda
-# from app_home import run_home
-# from app_ml import run_ml
+
+
 
 def main():
-    st.title('맛춤식')
+    st.subheader('AI 식단 생성')
+    
+    st.number_input('목표 칼로리 (kcal)', 1000, 6000, 2500, step=50)
 
-    st.subheader('탄단지까지 완벽하게 맞춘 식사, 단 한 번의 클릭으로. ')
+    st.slider('탄수화물 (%)', 10, 80, 50)
+    st.slider('단백질 (%)', 10, 50, 30)
+    st.slider('지방 (%)', 10, 50, 20)
 
-    menu = ['Home', 'EDA', 'ML']
-    choice = st.sidebar.selectbox('메뉴', menu)
 
-    if choice == menu[0] :
-        pass
-    elif choice == menu[1] :
-        run_eda()
-    elif choice == menu[2] :
-        pass
 
 if __name__ == '__main__':
     main()
