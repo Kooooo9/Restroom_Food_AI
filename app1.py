@@ -7,8 +7,6 @@ from app_eda import run_eda
 def main():
     st.title('맛춤식')
 
-    st.subheader('탄단지까지 완벽하게 맞춘 식사, 단 한 번의 클릭으로. ')
-
     menu = ['Home', 'EDA', 'ML']
     choice = st.sidebar.selectbox('메뉴', menu)
 
