@@ -9,9 +9,10 @@ genai.configure(api_key="AIzaSyA6kFiZlrVEeq4fPwf1kw7NeHCGKYtBNYM")
 model = genai.GenerativeModel("gemini-2.5-flash")
 
 def main():
-    df = pd.read_csv("/Users/younghun/Desktop/무제 폴더/data/20250408_음식DB.csv")
+    df = pd.read_csv("./data/20250408_음식DB.csv")
     st.title("이미지 분석")
     file = st.file_uploader("사진을 업로드하세요.", type=['jpg','jpeg','png'])
+    finish = ""
 
     if file is not None:
         image = Image.open(file)
@@ -24,7 +25,6 @@ def main():
             ])
             finish = ex.text.strip()
 
-    st.subheader("분석 결과")
     st.write(finish)
 
 if __name__ == "__main__":
