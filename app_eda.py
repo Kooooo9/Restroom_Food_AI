@@ -6,23 +6,21 @@ import matplotlib.pyplot as plt
 import seaborn as sb
 
 def run_eda():
-    df = pd.read_excel('./data/20250408_음식DB.xlsx')
+    df = pd.read_csv('./food1.csv')
 
-    st.text('이 데이터는 음식DB.xlsx 데이터입니다.')
+    # 음식별 영양정보 탐색 
+    st.markdown("---")
+    st.subheader("음식별 탄단지 정보")
 
-    radio_menu = ['데이터프레임', '성분별 통계']
-    radio_choice = st.radio('선택하세요', radio_menu)
-    if radio_choice == radio_menu[0] :
-        st.dataframe(df)
-    elif radio_choice == radio_menu[1] :
-        st.dataframe(df.describe())
+    choice = st.selectbox("음식을 선택하세요", df["식품명"].unique())
+    info = df[df["식품명"] == choice].iloc[0]
 
-        st.subheader('최대 / 최소값 확인')
+    st.write(f"**{choice}**의 영양정보")
+    st.json({
+        "칼로리(kcal)": int(info["에너지(kcal)"]),
+        "탄수화물(g)": float(info["탄수화물(g)"]),
+        "단백질(g)": float(info["단백질(g)"]),
+        "지방(g)": float(info["지방(g)"]),
+    })
 
-        min_max_menu = df.columns[ 1 :  ]
-        select_choice = st.selectbox('컬럼을 선택하세요', min_max_menu)
-
-        print(select_choice)
-    
-        st.info(f'{select_choice}는 {(df[select_choice].min())} 부터 {(df[select_choice].max())} 까지 있습니다.')
 

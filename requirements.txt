@@ -1,0 +1,7 @@
+streamlit
+seaborn
+jupyter
+numpy
+matplotlib.pyplot
+os
+google

@@ -8,14 +8,21 @@ api_key = os.getenv("GEMINI_API_KEY")
 genai.configure(api_key="AIzaSyA6kFiZlrVEeq4fPwf1kw7NeHCGKYtBNYM")
 model = genai.GenerativeModel("gemini-2.5-flash")
 
+<<<<<<< Updated upstream
 def main():
     st.title("AI 음식 분석")
     st.caption("이미지 기반 음식 이름 + 영양 성분 추정 시스템")
+=======
+def run_img():
+    df = pd.read_csv("./food1.csv")
+    st.title("이미지 분석")
+>>>>>>> Stashed changes
     file = st.file_uploader("사진을 업로드하세요.", type=['jpg','jpeg','png'])
     finish = ""
 
     if file is not None:
         image = Image.open(file)
+<<<<<<< Updated upstream
         st.image(file, caption="AI가 분석할 이미지", width=500)
 
         with st.spinner("AI가 이미지를 분석 중입니다..."):   
@@ -38,3 +45,16 @@ def main():
 
 if __name__ == "__main__":
     main()
+=======
+        st.image(file)
+
+        with st.spinner("AI가 이미지를 분석 중입니다..."):
+            ex = model.generate_content([
+                "업로드한 사진 속의 음식 이름과 영양정보를 알려줘"
+                "가능한 구체적으로 한국어로 답해줘", image
+            ])
+            finish = ex.text.strip()
+
+    st.write(finish)
+
+>>>>>>> Stashed changes
