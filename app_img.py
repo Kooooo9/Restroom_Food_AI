@@ -4,57 +4,86 @@ import os
 import google.generativeai as genai
 from PIL import Image
 
+
 api_key = os.getenv("GEMINI_API_KEY")
-genai.configure(api_key="AIzaSyA6kFiZlrVEeq4fPwf1kw7NeHCGKYtBNYM")
+if not api_key:
+    api_key = "AIzaSyA6kFiZlrVEeq4fPwf1kw7NeHCGKYtBNYM"
+genai.configure(api_key=api_key)
 model = genai.GenerativeModel("gemini-2.5-flash")
 
-<<<<<<< Updated upstream
 def main():
-    st.title("AI 음식 분석")
-    st.caption("이미지 기반 음식 이름 + 영양 성분 추정 시스템")
-=======
-def run_img():
-    df = pd.read_csv("./food1.csv")
-    st.title("이미지 분석")
->>>>>>> Stashed changes
-    file = st.file_uploader("사진을 업로드하세요.", type=['jpg','jpeg','png'])
-    finish = ""
+    st.title("AI 음식 분석기")
+    st.caption("AI가 음식 이미지를 분석해 영양정보를 예측해줍니다.")
+    file = st.file_uploader("사진을 업로드하세요", type=['jpg', 'jpeg', 'png'])
 
     if file is not None:
         image = Image.open(file)
-<<<<<<< Updated upstream
-        st.image(file, caption="AI가 분석할 이미지", width=500)
+        st.image(image, caption="AI가 분석할 이미지")
 
-        with st.spinner("AI가 이미지를 분석 중입니다..."):   
+        with st.spinner("🤖 AI가 이미지를 분석 중입니다..."):
             ex = model.generate_content([
                 """
-                당신은 음식 전문가입니다.
-                이 음식 사진을 보고 다음을 한국어로 자세히 알려주세요:
-                1. 음식 이름
-                2. 대표 재료 3~5가지
-                3. 예상되는 열량(kcal)과 주요 영양성분(탄수화물, 단백질, 지방) 수치 추정
-                4. 간단한 맛 설명 한 줄
-                """, image
-                ])
+                당신은 헬스 트레이너이자 영양 코치입니다.
+                음식 사진을 보고 아래 형식으로 한국어로 분석하세요.
+
+                🍽 음식 이름:  
+                🔥 영양정보 (1인분 기준)
+                - 열량(kcal):  
+                - 탄수화물(g):  
+                - 단백질(g):  
+                - 지방(g):  
+                💡 운동 후 섭취 시 장점:  
+                ⚠️ 주의사항:
+
+                출력은 줄마다 구분된 명확한 텍스트로 작성하세요.
+                """,
+                image
+            ])
             finish = ex.text.strip()
 
-            st.write(finish)
+        st.subheader("AI 분석 결과")
+        st.markdown(f"> {finish}")
+
+        kcal = extract_number(finish, "열량")
+        carbo = extract_number(finish, "탄수화물")
+        protein = extract_number(finish, "단백질")
+        fat = extract_number(finish, "지방")
+
+        data = pd.DataFrame({
+            "영양성분": ["열량(kcal)", "탄수화물(g)", "단백질(g)", "지방(g)"],
+            "예상값": [kcal, carbo, protein, fat]
+        })
+        st.markdown("### 📊 영양정보 요약")
+        st.dataframe(data, use_container_width=True)
+
+        st.markdown("### 💪 운동 후 섭취 시 장점")
+        st.write(extract_section(finish, "💡 운동 후 섭취 시 장점", "⚠️ 주의사항"))
+
+        st.markdown("### ⚠️ 주의사항")
+        st.write(extract_section(finish, "⚠️ 주의사항"))
+
     else:
-        st.info("이미지를 업로드하면 AI가 자동으로 분석해줍니다.")
+        st.info("음식 사진을 업로드해주세요.")
+
+import re
+
+def extract_number(text, keyword):
+    pattern = rf"{keyword}.*?(\d+)"
+    match = re.search(pattern, text)
+    return int(match.group(1)) if match else None
+
+def extract_section(text, start, end_marker=None):
+    start_idx = text.find(start)
+    if start_idx == -1:
+        return
+    if end_marker:
+        end_idx = text.find(end_marker, start_idx)
+        section = text[start_idx + len(start):end_idx].strip()
+    else:
+        section = text[start_idx + len(start):].strip()
+    return section if section else ""
+
 
 
 if __name__ == "__main__":
     main()
-=======
-        st.image(file)
-
-        with st.spinner("AI가 이미지를 분석 중입니다..."):
-            ex = model.generate_content([
-                "업로드한 사진 속의 음식 이름과 영양정보를 알려줘"
-                "가능한 구체적으로 한국어로 답해줘", image
-            ])
-            finish = ex.text.strip()
-
-    st.write(finish)
-
->>>>>>> Stashed changes
