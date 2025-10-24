@@ -11,7 +11,7 @@ if not api_key:
 genai.configure(api_key=api_key)
 model = genai.GenerativeModel("gemini-2.5-flash")
 
-def main():
+def run_img():
     st.title("AI 음식 분석기")
     st.caption("AI가 음식 이미지를 분석해 영양정보를 예측해줍니다.")
     file = st.file_uploader("사진을 업로드하세요", type=['jpg', 'jpeg', 'png'])
@@ -82,8 +82,3 @@ def extract_section(text, start, end_marker=None):
     else:
         section = text[start_idx + len(start):].strip()
     return section if section else ""
-
-
-
-if __name__ == "__main__":
-    main()
