@@ -11,10 +11,9 @@ def clear_results():
     # 입력 정보(키, 몸무게, 나이)는 유지됩니다.
 
 
-# --- 1. 세션 상태 초기화 함수 ---
+# --- 1. 세션 상태 초기화 함수 (가장 먼저, 외부로 분리) ---
 def initialize_state():
     """st.session_state 변수들을 초기화합니다."""
-    # 앱 최초 실행 시에만 초기화
     if 'user_height' not in st.session_state:
         st.session_state.user_height = 160
     if 'user_weight' not in st.session_state:
@@ -22,7 +21,6 @@ def initialize_state():
     if 'user_age' not in st.session_state:
         st.session_state.user_age = 25
     
-    # 계산 결과는 clear_results 함수가 담당하거나, 최초 로드 시에만 초기 상태로 설정
     if 'bmi_result' not in st.session_state:
         st.session_state.bmi_result = None
     if 'status_message' not in st.session_state:
@@ -30,10 +28,40 @@ def initialize_state():
     if 'recommended_weight' not in st.session_state:
         st.session_state.recommended_weight = ""
     
-    # 페이지 진입 추적을 위한 변수 초기화
     if 'current_page' not in st.session_state:
         st.session_state.current_page = 'user_info'
 
+
+# --- 2. 외부에서 값만 가져오는 함수 ---
+def get_user_data():
+    """
+    외부에서 사용자 입력 값을 가져오는 함수
+    
+    Returns:
+        dict: {
+            'height': 키(cm),
+            'weight': 몸무게(kg),
+            'age': 나이,
+            'bmi': BMI 계산 결과 (계산 전이면 None)
+        }
+    """
+    # 세션 상태 초기화 확인
+    initialize_state()
+    
+    return {
+        'height': st.session_state.user_height,
+        'weight': st.session_state.user_weight,
+        'age': st.session_state.user_age,
+        'bmi': st.session_state.bmi_result
+    }
+
+
+# --- 결과 초기화 함수 ---
+def clear_results():
+    """BMI 계산 결과를 세션 상태에서 지웁니다."""
+    st.session_state.bmi_result = None
+    st.session_state.status_message = ""
+    st.session_state.recommended_weight = ""
 
 # --- 1-1. 나이대별 BMI 기준 반환 함수 ---
 def get_bmi_criteria(age):
@@ -172,14 +200,14 @@ def calculate_bmi():
 
 def run_user_info():
     # 상태 초기화 함수 호출
-    initialize_state()
+    
 
     # 페이지 재진입 감지: 다른 페이지에서 돌아온 경우 결과 초기화
     if st.session_state.current_page != 'user_info':
         clear_results()
         st.session_state.current_page = 'user_info'
-
-    st.subheader('사용자의 정보를 입력 받아 BMI 계산 해드립니다.')
+    st.markdown("---")
+    st.subheader('사용자의 정보를 입력 받아 BMI를 계산 해드립니다.')
     
     # 입력 필드를 가로로 배열 (3개 컬럼)
     col1, col2, col3 = st.columns(3)

@@ -40,7 +40,8 @@ def train_regression_model():
     return model
 
 def run_img():
-    st.title("AI 음식 분석기")
+    st.markdown("---")
+    st.subheader("AI 음식 분석기")
     st.caption("AI가 음식 이미지를 분석해 영양정보를 예측해줍니다.")
 
     try:

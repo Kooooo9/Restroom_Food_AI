@@ -32,7 +32,7 @@ def run_pref():
     
     df = pd.read_csv('./food1.csv')
     # 사용자 입력
-    st.header('수치를 입력하세요')
+    st.subheader('수치를 입력하세요')
     col1, col2 = st.columns(2)
     with col1:
         natrium = st.number_input('나트륨(mg)', min_value=0, max_value=10000, step=10)
