@@ -263,9 +263,3 @@ def run_user_info():
         # 적정 체중 정보 출력
         st.write("### 적정 체중 정보")
         st.markdown(st.session_state.recommended_weight)
-
-    def other_function():
-        height = st.session_state.user_height
-        weight = st.session_state.user_weight
-        age = st.session_state.user_age
-        bmi = st.session_state.bmi_result
