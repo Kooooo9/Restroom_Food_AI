@@ -200,8 +200,7 @@ def calculate_bmi():
 
 def run_user_info():
     # 상태 초기화 함수 호출
-    
-
+    initialize_state()
     # 페이지 재진입 감지: 다른 페이지에서 돌아온 경우 결과 초기화
     if st.session_state.current_page != 'user_info':
         clear_results()
