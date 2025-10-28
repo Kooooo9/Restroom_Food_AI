@@ -1,32 +1,31 @@
-from app_eda import run_eda
-from app_pref import run_pref
-from app_img import run_img
-from app_ml import run_ml
 import streamlit as st
-
-from app_user_info import run_user_info
-
+from app_pref import run_pref
+from app_eda import run_eda
+from app_ml import run_ml
+from app_img import run_img
 
 def main():
-    
-    st.title('맛춤식')
+    st.title("맛춤식 - AI 맞춤형 식단 관리 앱")
 
-    menu = ['Home', '사용자 정보', 'Pref', 'EDA', 'ML', 'Image']
-    choice = st.sidebar.selectbox('메뉴', menu)
+    menu = [
+        "홈",
+        "내 맛 선호도 입력",
+        "음식 영양 정보 보기",
+        "맞춤 식단 설정",
+        "AI 음식 분석기"
+    ]
+    choice = st.sidebar.selectbox("메뉴를 선택하세요", menu)
 
-    if choice == menu[0]:
-        st.write("이 앱은 식단 데이터를 분석하고 AI로 추천합니다.")
-    elif choice == menu[1]:
-        run_user_info()
-    elif choice == menu[2]:
+    if "홈" in choice:
+        st.write("이 앱은 사용자의 맛 선호도와 AI 분석을 기반으로 맞춤 식단을 추천합니다.")
+    elif "맛 선호도" in choice:
         run_pref()
-    elif choice == menu[3]:
+    elif "영양 정보" in choice:
         run_eda()
-    elif choice == menu[4]:
+    elif "식단 설정" in choice:
         run_ml()
-    elif choice == menu[5]:
+    elif "분석기" in choice:
         run_img()
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
-
