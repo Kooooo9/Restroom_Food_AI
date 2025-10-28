@@ -24,7 +24,7 @@ def main():
     elif choice == menu[4]:
         run_ml()
     elif choice == menu[5]:
-    menu = [
+        menu = [
         "홈",
         "내 맛 선호도 입력",
         "음식 영양 정보 보기",
