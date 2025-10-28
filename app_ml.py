@@ -2,6 +2,8 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 
+from app_user_info import get_user_data
+
 def meal_plan(df, kcal, carb, protein, fat, meal_count):
     carb = (kcal * (carb / 100)) / 4
     protein = (kcal * (protein / 100)) / 4
@@ -9,12 +11,18 @@ def meal_plan(df, kcal, carb, protein, fat, meal_count):
 # 영양소가 1g당 제공하는 칼로리가 달라 g을 계산하는 공식 추가해뒀습니다.
 # 탄수화물, 단백질 = 1g 당 4kcal, 지방 = 1g당 9kcal
         
-
-  
 def run_ml():
     df = pd.read_csv('./food1.csv')
-
+    st.markdown("---")
     st.subheader('AI 식단 생성')
+
+    # 사용자가 입력한 정보 가져오기
+    user_data = get_user_data()
+    height = user_data['height']
+    weight = user_data['weight']
+    age = user_data['age']
+    bmi = user_data['bmi']
+    print(f"키: {height}cm, 몸무게: {weight}kg, 나이: {age}, bmi: {bmi}")
     
     kcal = st.number_input('목표 칼로리 (kcal)', 1000, 6000, 2500, step=50)
     col0, col1, col2, col3 = st.columns(4)

@@ -12,6 +12,7 @@ def main():
 
     menu = [
         "홈",
+        "사용자 정보 입력",
         "내 맛 선호도 입력",
         "음식 영양 정보 보기",
         "맞춤 식단 설정",
@@ -21,6 +22,8 @@ def main():
 
     if "홈" in choice:
         st.write("이 앱은 사용자의 맛 선호도와 AI 분석을 기반으로 맞춤 식단을 추천합니다.")
+    elif "사용자 정보" in choice:
+        run_user_info()
     elif "맛 선호도" in choice:
         run_pref()
     elif "영양 정보" in choice:

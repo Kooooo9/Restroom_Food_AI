@@ -8,7 +8,7 @@ from sklearn.linear_model import LinearRegression
 
 api_key = os.getenv("GEMINI_API_KEY")
 if not api_key:
-    api_key = st.secrets["API"]["API_KEY"]
+    api_key = st.secrets["API_KEY"]
 
 genai.configure(api_key=api_key)
 model = genai.GenerativeModel("gemini-2.5-flash")
@@ -32,7 +32,8 @@ def extract_section(text, start, end_marker=None):
     return section if section else ""
 
 def run_img():
-    st.title("AI 음식 분석기")
+    st.markdown("---")
+    st.subheader("AI 음식 분석기")
     st.caption("AI가 음식 이미지를 분석해 영양정보를 예측해줍니다.")
 
     try:
