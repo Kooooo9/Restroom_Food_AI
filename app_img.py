@@ -8,9 +8,8 @@ from sklearn.linear_model import LinearRegression
 
 api_key = os.getenv("GEMINI_API_KEY")
 if not api_key:
-    api_key = st.secrets["API_KEY"]
-
     api_key = st.secrets["API"]["API_KEY"]
+
 genai.configure(api_key=api_key)
 model = genai.GenerativeModel("gemini-2.5-flash")
 
