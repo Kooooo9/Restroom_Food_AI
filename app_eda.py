@@ -15,12 +15,13 @@ def run_eda():
     choice = st.selectbox("음식을 선택하세요", df["식품명"].unique())
     info = df[df["식품명"] == choice].iloc[0]
 
-    st.write(f"**{choice}**의 영양정보")
-    st.json({
-        "칼로리(kcal)": int(info["에너지(kcal)"]),
-        "탄수화물(g)": float(info["탄수화물(g)"]),
-        "단백질(g)": float(info["단백질(g)"]),
-        "지방(g)": float(info["지방(g)"]),
-    })
+    st.markdown(f"""
+    ### {choice}의 영양정보  
+    - **칼로리:** {int(info['에너지(kcal)'])} kcal  
+    - **탄수화물:** {float(info['탄수화물(g)'])} g  
+    - **단백질:** {float(info['단백질(g)'])} g  
+    - **지방:** {float(info['지방(g)'])} g  
+    """)
+
 
 
