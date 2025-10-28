@@ -3,67 +3,16 @@ import pandas as pd
 import os
 import google.generativeai as genai
 from PIL import Image
+from sklearn.linear_model import LinearRegression
 
 
 api_key = os.getenv("GEMINI_API_KEY")
 if not api_key:
+    api_key = st.secrets["API_KEY"]
+
     api_key = st.secrets["API"]["API_KEY"]
 genai.configure(api_key=api_key)
 model = genai.GenerativeModel("gemini-2.5-flash")
-
-def run_img():
-    st.title("AI 음식 분석기")
-    st.caption("AI가 음식 이미지를 분석해 영양정보를 예측해줍니다.")
-    file = st.file_uploader("사진을 업로드하세요", type=['jpg', 'jpeg', 'png'])
-
-    if file is not None:
-        image = Image.open(file)
-        st.image(image, caption="AI가 분석할 이미지")
-
-        with st.spinner("🤖 AI가 이미지를 분석 중입니다..."):
-            ex = model.generate_content([
-                """
-                당신은 헬스 트레이너이자 영양 코치입니다.
-                음식 사진을 보고 아래 형식으로 한국어로 분석하세요.
-
-                🍽 음식 이름:  
-                🔥 영양정보 (1인분 기준)
-                - 열량(kcal):  
-                - 탄수화물(g):  
-                - 단백질(g):  
-                - 지방(g):  
-                💡 운동 후 섭취 시 장점:  
-                ⚠️ 주의사항:
-
-                출력은 줄마다 구분된 명확한 텍스트로 작성하세요.
-                """,
-                image
-            ])
-            finish = ex.text.strip()
-
-        st.subheader("AI 분석 결과")
-        st.markdown(f"> {finish}")
-
-        kcal = extract_number(finish, "열량")
-        carbo = extract_number(finish, "탄수화물")
-        protein = extract_number(finish, "단백질")
-        fat = extract_number(finish, "지방")
-
-        data = pd.DataFrame({
-            "영양성분": ["열량(kcal)", "탄수화물(g)", "단백질(g)", "지방(g)"],
-            "예상값": [kcal, carbo, protein, fat]
-        })
-        st.markdown("### 📊 영양정보 요약")
-        st.dataframe(data, use_container_width=True)
-
-        st.markdown("### 💪 운동 후 섭취 시 장점")
-        st.write(extract_section(finish, "💡 운동 후 섭취 시 장점", "⚠️ 주의사항"))
-
-        st.markdown("### ⚠️ 주의사항")
-        st.write(extract_section(finish, "⚠️ 주의사항"))
-
-    else:
-        st.info("음식 사진을 업로드해주세요.")
 
 import re
 
@@ -82,3 +31,81 @@ def extract_section(text, start, end_marker=None):
     else:
         section = text[start_idx + len(start):].strip()
     return section if section else ""
+
+def run_img():
+    st.title("AI 음식 분석기")
+    st.caption("AI가 음식 이미지를 분석해 영양정보를 예측해줍니다.")
+
+    try:
+        df = pd.read_csv("./food1.csv")
+        X = df[["탄수화물(g)", "단백질(g)", "지방(g)", "당류(g)", "나트륨(mg)"]]
+        y = df["에너지(kcal)"]
+    except Exception as e:
+        pass
+        return
+
+    regressor = LinearRegression()
+    regressor.fit(X, y)
+
+    file = st.file_uploader("사진을 업로드하세요", type=['jpg', 'jpeg', 'png'])
+
+    if file is not None:
+        image = Image.open(file)
+        st.image(image, caption="AI가 분석할 이미지")
+
+        with st.spinner("🤖 AI가 이미지를 분석 중입니다..."):
+            ex = model.generate_content([
+                """
+                당신은 헬스 트레이너이자 영양 코치입니다.
+                음식 사진을 보고 아래 형식으로 한국어로 분석하세요.
+
+                🍽 음식 이름:  
+                🔥 영양정보 (1인분 기준)
+                - 열량(kcal):  
+                - 탄수화물(g):  
+                - 단백질(g):  
+                - 지방(g):  
+                - 당류(g):
+                - 나트륨(mg):
+
+                💡 운동 후 섭취 시 장점:  
+                ⚠️ 주의사항:
+
+                출력은 줄마다 구분된 명확한 텍스트로 작성하세요.
+                """,
+                image
+            ])
+            finish = ex.text.strip()
+
+        st.subheader("AI 분석 결과")
+        st.markdown(f"> {finish}")
+
+        kcal = extract_number(finish, "열량")
+        carbo = extract_number(finish, "탄수화물")
+        protein = extract_number(finish, "단백질")
+        fat = extract_number(finish, "지방")
+        sugar = extract_number(finish, "당류")
+        sodium = extract_number(finish, "나트륨")
+
+        data = pd.DataFrame({
+            "영양성분": ["열량(kcal)", "탄수화물(g)", "단백질(g)", "지방(g)", "당류(g)", "나트륨(mg)"],
+            "예상값": [kcal, carbo, protein, fat, sugar, sodium]
+        })
+        st.markdown("### 📊 영양정보 요약")
+        st.dataframe(data, use_container_width=True)
+
+        if all(v is not None for v in [carbo, protein, fat, sugar, sodium]):
+            new_data = [[carbo, protein, fat, sugar, sodium]]
+            corrected_kcal = regressor.predict(new_data)[0]
+            st.success(f"🎯 보정된 예측 kcal: **{corrected_kcal:.2f} kcal**")
+        else:
+            st.warning("⚠️ 일부 영양성분이 누락되어 kcal 보정이 불가능합니다.")
+
+        st.markdown("### 💪 운동 후 섭취 시 장점")
+        st.write(extract_section(finish, "💡 운동 후 섭취 시 장점", "⚠️ 주의사항"))
+
+        st.markdown("### ⚠️ 주의사항")
+        st.write(extract_section(finish, "⚠️ 주의사항"))
+
+    else:
+        st.info("음식 사진을 업로드해주세요.")
