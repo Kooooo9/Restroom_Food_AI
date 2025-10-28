@@ -35,6 +35,59 @@ def initialize_state():
         st.session_state.current_page = 'user_info'
 
 
+# --- 1-1. 나이대별 BMI 기준 반환 함수 ---
+def get_bmi_criteria(age):
+    """
+    나이에 따른 BMI 기준을 반환합니다.
+    
+    Returns:
+        dict: {
+            'age_group': 연령대 설명,
+            'underweight': 저체중 상한값,
+            'normal_min': 정상 하한값,
+            'normal_max': 정상 상한값,
+            'overweight_max': 과체중 상한값,
+            'description': 기준 설명
+        }
+    """
+    if 20 <= age < 40:
+        return {
+            'age_group': '20~40대',
+            'underweight': 18.5,
+            'normal_min': 18.5,
+            'normal_max': 22.9,
+            'overweight_max': 24.9,
+            'description': '일반적인 아시아 기준'
+        }
+    elif 40 <= age < 60:
+        return {
+            'age_group': '40~60대',
+            'underweight': 18.5,
+            'normal_min': 18.5,
+            'normal_max': 23.4,
+            'overweight_max': 25.4,
+            'description': '중년 이후 약간 높은 BMI 권장'
+        }
+    elif age >= 60:
+        return {
+            'age_group': '60대 이상',
+            'underweight': 18.5,
+            'normal_min': 18.5,
+            'normal_max': 24.9,
+            'overweight_max': 27.4,
+            'description': '노년층은 다소 비만 허용 범위 확대'
+        }
+    else:  # 20세 미만
+        return {
+            'age_group': '20세 미만',
+            'underweight': 18.5,
+            'normal_min': 18.5,
+            'normal_max': 22.9,
+            'overweight_max': 24.9,
+            'description': '일반적인 아시아 기준 적용'
+        }
+
+
 # --- 2. BMI 계산 및 상태 업데이트 함수 (버튼 클릭 시 실행) ---
 def calculate_bmi():
     """
@@ -73,32 +126,41 @@ def calculate_bmi():
     bmi = w / (height_m ** 2)
     st.session_state.bmi_result = bmi
 
+    # 2-1. 나이대별 BMI 기준 가져오기
+    criteria = get_bmi_criteria(a)
 
-    # 3. BMI 상태 분류 (아시아-태평양 기준)
-    if bmi < 18.5:
-        status = "마른 상태입니다. (저체중)"
-    elif bmi < 23.0:
-        status = "평균 상태입니다. (정상)"
-    elif bmi < 25.0:
+    # 3. BMI 상태 분류 (나이대별 기준 적용)
+    if bmi < criteria['underweight']:
+        status = "저체중입니다."
+        status_category = "저체중"
+    elif bmi < criteria['normal_max']:
+        status = "정상 체중입니다."
+        status_category = "정상"
+    elif bmi <= criteria['overweight_max']:
         status = "과체중입니다."
+        status_category = "과체중"
     else:
-        status = "비만 상태입니다."
+        status = "비만입니다."
+        status_category = "비만"
 
 
-    # 4. 적정 체중 범위 계산 (정상 BMI 18.5 ~ 22.9 기준)
-    ideal_weight_min = 18.5 * (height_m ** 2)
-    ideal_weight_max = 22.9 * (height_m ** 2)
+    # 4. 적정 체중 범위 계산 (나이대별 정상 BMI 기준)
+    ideal_weight_min = criteria['normal_min'] * (height_m ** 2)
+    ideal_weight_max = criteria['normal_max'] * (height_m ** 2)
 
 
     # 5. 결과 메시지 생성
     
-    # st.info에 들어갈 메시지 형식: 마크다운 대신 일반 텍스트 사용
-    status_msg = f"현재 사용자의 BMI는 {bmi:.2f} 이며, {status}"
+    # st.info에 들어갈 메시지 형식
+    status_msg = f"현재 사용자의 BMI는 {bmi:.2f}이며, {status}"
     
     # st.write에 들어갈 메시지 형식
     recommended_msg = f"""
-    나이 {a}세의 사용자님께, 키 {h:.0f}cm에 대한 적정 체중(정상 BMI 범위 18.5 ~ 22.9)은
-    **{ideal_weight_min:.1f}kg 부터 {ideal_weight_max:.1f}kg 까지** 입니다.
+    **{a}세 ({criteria['age_group']})** 사용자님의 적정 체중 정보:
+    
+    - 키: **{h:.0f}cm**
+    - 정상 BMI 범위: **{criteria['normal_min']} ~ {criteria['normal_max']}**
+    - 적정 체중 범위: **{ideal_weight_min:.1f}kg ~ {ideal_weight_max:.1f}kg**
     """
     
     st.session_state.status_message = status_msg
@@ -164,13 +226,12 @@ def run_user_info():
 
     # 결과 출력
     if st.session_state.bmi_result is not None:
-        # BMI 계산 결과 출력: st.info 사용, 마크다운 제거
+        # BMI 계산 결과 출력: st.info 사용
         st.info(f"BMI 계산 결과: {st.session_state.status_message}", icon="💡")
         
         st.markdown("---")
 
 
-        # 적정 체중 정보 출력: st.write 사용
+        # 적정 체중 정보 출력
         st.write("### 적정 체중 정보")
-        # 마크다운 처리된 추천 메시지를 바로 출력
         st.markdown(st.session_state.recommended_weight)
