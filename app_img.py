@@ -87,7 +87,7 @@ def run_img():
             <h2>🖼️ 분석할 이미지</h2>
         </div>
     """, unsafe_allow_html=True)
-    st.image(image, use_column_width=True)
+    st.image(image, use_container_width=True)
 
     model = load_model()
     with st.spinner("🤖 AI가 이미지를 분석 중입니다..."):
@@ -177,4 +177,3 @@ def run_img():
 
         st.markdown("### ⚠️ 주의사항")
         st.write(extract_section(finish, "⚠️ 주의사항"))
-        
