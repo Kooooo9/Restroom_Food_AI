@@ -67,17 +67,39 @@ def get_user_data():
     
     사용 예시:
         data = get_user_data()
-        print(f"키: {data['height']}cm, 몸무게: {data['weight']}kg")
+        if data['height'] is not None:
+            print(f"키: {data['height']}cm, 몸무게: {data['weight']}kg")
     
     Returns:
-        dict: 사용자의 키, 몸무게, 나이, BMI 결과
+        dict: 사용자의 키, 몸무게, 나이, BMI 결과. 초기화되지 않은 경우 None 반환
     """
-    return {
-        'height': st.session_state.user_height,
-        'weight': st.session_state.user_weight,
-        'age': st.session_state.user_age,
-        'bmi': st.session_state.bmi_result
-    }
+    try:
+        # 세션 상태가 초기화되어 있는지 확인
+        if not all(key in st.session_state for key in ['user_height', 'user_weight', 'user_age', 'bmi_result']):
+            # 세션 상태가 초기화되지 않은 경우
+            initialize_state()
+            return {
+                'height': None,
+                'weight': None,
+                'age': None,
+                'bmi': None
+            }
+        
+        # 세션 상태가 초기화된 경우
+        return {
+            'height': st.session_state.user_height,
+            'weight': st.session_state.user_weight,
+            'age': st.session_state.user_age,
+            'bmi': st.session_state.bmi_result
+        }
+    except Exception:
+        # 예기치 않은 오류 발생 시
+        return {
+            'height': None,
+            'weight': None,
+            'age': None,
+            'bmi': None
+        }
 
 
 # ============================================================================
@@ -216,8 +238,7 @@ def calculate_bmi():
     
     # 적정 체중 정보 메시지
     recommended_msg = f"""
-    **{age}세 ({criteria['age_group']})** 사용자님의 적정 체중 정보:
-    
+
     - 키: **{height:.0f}cm**
     - 정상 BMI 범위: **{criteria['normal_min']} ~ {criteria['normal_max']}**
     - 적정 체중 범위: **{ideal_weight_min:.1f}kg ~ {ideal_weight_max:.1f}kg**
@@ -246,8 +267,22 @@ def run_user_info():
         st.session_state.current_page = 'user_info'
     
     # --- 화면 제목 ---
-    st.markdown("---")
-    st.subheader('사용자의 정보를 입력 받아 BMI를 계산 해드립니다.')
+    st.markdown("""
+        <div style="text-align: center; padding: 2rem 0;">
+            <h1 style="color: var(--primary-color);">BMI 계산기</h1>
+            <p style="color: var(--text-color); font-size: 1.2rem;">
+                사용자의 정보를 입력받아 BMI를 계산하여 식단을 추천하는 데 활용됩니다.
+            </p>
+        </div>
+    """, unsafe_allow_html=True)
+    
+    # --- 입력 섹션 ---
+    st.markdown("""
+        <div class="custom-card">
+            <h2>👤 사용자 정보 입력</h2>
+            <p>키, 몸무게, 나이를 입력해주세요.</p>
+        </div>
+    """, unsafe_allow_html=True)
     
     # --- 입력 필드 (가로로 3개 배치) ---
     col1, col2, col3 = st.columns(3)
@@ -260,7 +295,8 @@ def run_user_info():
             min_value=140,
             max_value=250,
             step=1,
-            value=st.session_state.user_height
+            value=st.session_state.user_height,
+            help="키는 140cm ~ 250cm 사이로 입력해주세요"
         )
         # 값이 변경되면 session_state 업데이트
         if height != st.session_state.user_height:
@@ -295,18 +331,36 @@ def run_user_info():
     
     # --- BMI 계산 버튼 ---
     # 버튼을 누르면 calculate_bmi() 함수가 실행됨
-    st.button('BMI 계산 및 결과 확인', on_click=calculate_bmi)
-    
-    st.markdown("---")
+    st.button('BMI 계산 및 결과 확인', on_click=calculate_bmi, use_container_width=True)
     
     # --- 결과 표시 ---
     # BMI가 계산되었을 때만 결과를 보여줌
     if st.session_state.bmi_result is not None:
         # BMI 결과 출력
-        st.info(f"BMI 계산 결과: {st.session_state.status_message}", icon="💡")
+        st.markdown("""
+            <div class="custom-card">
+                <h2 style="color: var(--primary-color);">BMI 계산 결과</h2>
+            </div>
+        """, unsafe_allow_html=True)
         
-        st.markdown("---")
+        col1, col2 = st.columns(2)
+        with col1:
+            st.markdown(f"""
+            <div class="custom-card" style="height: 240px;">
+                <div style="text-align: center;">
+                    <h3 style="color: var(--accent-color); margin-bottom: 1rem;">📊 BMI 수치</h3>
+                    <div style="font-size: 1.5rem; font-weight: bold; margin: 1rem 0;">{st.session_state.bmi_result:.1f}</div>
+                    <div style="color: var(--text-color);">{st.session_state.status_message}</div>
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
         
-        # 적정 체중 정보 출력
-        st.write("### 적정 체중 정보")
-        st.markdown(st.session_state.recommended_weight)
+        with col2:
+            st.markdown(f"""
+            <div class="custom-card" style="height: 100%;">
+                <div style="text-align: center;">
+                    <h3 style="color: var(--secondary-color); margin-bottom: 1rem;">⚖️ 적정 체중 정보</h3>
+                    <div style="text-align: left;">{st.session_state.recommended_weight}</div>
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
