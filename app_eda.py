@@ -5,6 +5,7 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sb
+import plotly.express as px
 
 def run_eda():
     df = pd.read_csv('./food1.csv')
@@ -90,23 +91,30 @@ def run_eda():
     # 원형 차트 생성
     col1, col2 = st.columns([2, 1])
     with col1:
-        fig, ax = plt.subplots(figsize=(5, 5))
         nutrients = ['탄수화물', '단백질', '지방']
         values = [info['탄수화물(g)'], info['단백질(g)'], info['지방(g)']]
         colors = ['#2ECC71', '#3498DB', '#E74C3C']
         
-        # 도넛 차트 생성 (텍스트 없이)
-        plt.pie(values, colors=colors, startangle=90, 
-                wedgeprops=dict(width=0.7))
+        # Plotly 도넛 차트
+        fig = px.pie(
+            names=nutrients,
+            values=values,
+            color=nutrients,
+            color_discrete_sequence=colors,
+            hole=0.4,  # 도넛 모양
+            title=f"{choice}의 영양소 비율"
+        )
         
-        # 범례 설정
-        plt.legend(nutrients,
-                  title="영양소",
-                  loc="center left",
-                  bbox_to_anchor=(1, 0, 0.5, 1))
-        
-        plt.title(f'{choice}의 영양소 비율', pad=20, size=12)
-        st.pyplot(fig)
+        # 차트 스타일 조정
+        fig.update_traces(textinfo='percent+label', pull=[0.05, 0.05, 0.05])
+        fig.update_layout(
+            legend_title="영양소",
+            margin=dict(t=50, b=20, l=0, r=0)
+        )
+
+        # Streamlit에 표시
+        st.plotly_chart(fig, use_container_width=True)
+
     
     # 추천 식단 조합
     st.markdown("""
@@ -126,6 +134,3 @@ def run_eda():
     - 단백질 비율: {protein_ratio:.1f}% (권장: 15-20%)
     - 지방 비율: {fat_ratio:.1f}% (권장: 20-25%)
     """)
-
-
-
