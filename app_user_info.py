@@ -271,8 +271,7 @@ def run_user_info():
         </div>
     """, unsafe_allow_html=True)
     
-    st.markdown(custom_css, unsafe_allow_html=True)
-    
+
     # --- 입력 섹션 ---
     st.markdown("""
         <div class="custom-card">
@@ -281,9 +280,10 @@ def run_user_info():
         </div>
     """, unsafe_allow_html=True)
     
+    st.markdown(custom_css, unsafe_allow_html=True)
     # --- 입력 필드 (가로로 3개 배치) ---
     col1, col2, col3 = st.columns(3)
-    
+
     with col1:
         # 키 입력 필드 (label_visibility="hidden" 적용)
         height = st.number_input(
