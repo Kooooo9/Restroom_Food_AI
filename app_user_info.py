@@ -9,13 +9,6 @@ def initialize_state():
     """
     앱이 처음 실행될 때 필요한 변수들을 준비합니다.
     이미 값이 있으면 건드리지 않고, 없을 때만 기본값을 설정합니다.
-    
-    예시:
-    - 처음 실행: user_height = 160 (기본값)
-    - 사용자가 170으로 변경
-    - 페이지 이동 후 복귀: user_height = 170 (유지됨)
-    
-    중요: number_input의 key와 연결된 값은 여기서 초기화해야 합니다!
     """
     # 사용자 입력값 (없을 때만 기본값 설정)
     if 'user_height' not in st.session_state:
@@ -46,10 +39,6 @@ def clear_results():
     """
     BMI 계산 결과만 지웁니다.
     사용자가 입력한 키, 몸무게, 나이는 그대로 유지됩니다.
-    
-    언제 사용되나요?
-    - 사용자가 키/몸무게/나이를 변경했을 때
-    - 다른 페이지에서 돌아왔을 때
     """
     st.session_state.bmi_result = None
     st.session_state.status_message = ""
@@ -64,14 +53,6 @@ def get_user_data():
     """
     현재 저장된 사용자 데이터를 가져옵니다.
     다른 파일이나 함수에서 사용자 정보가 필요할 때 사용합니다.
-    
-    사용 예시:
-        data = get_user_data()
-        if data['height'] is not None:
-            print(f"키: {data['height']}cm, 몸무게: {data['weight']}kg")
-    
-    Returns:
-        dict: 사용자의 키, 몸무게, 나이, BMI 결과. 초기화되지 않은 경우 None 반환
     """
     try:
         # 세션 상태가 초기화되어 있는지 확인
@@ -109,21 +90,6 @@ def get_user_data():
 def get_bmi_criteria(age):
     """
     나이에 따라 다른 BMI 기준을 알려줍니다.
-    
-    왜 나이별로 다른가요?
-    - 나이가 많을수록 건강한 BMI 범위가 약간 높아집니다
-    - 노년층은 약간의 체중이 건강에 더 유리할 수 있습니다
-    
-    Args:
-        age (int): 사용자의 나이
-    
-    Returns:
-        dict: BMI 기준 정보
-            - age_group: 연령대
-            - underweight: 저체중 기준
-            - normal_min: 정상 체중 최소값
-            - normal_max: 정상 체중 최대값
-            - overweight_max: 과체중 최대값
     """
     if 20 <= age < 40:
         return {
@@ -171,14 +137,6 @@ def calculate_bmi():
     """
     사용자가 입력한 정보로 BMI를 계산합니다.
     'BMI 계산 및 결과 확인' 버튼을 누르면 이 함수가 실행됩니다.
-    
-    계산 순서:
-    1. 입력값이 올바른지 확인 (유효성 검사)
-    2. BMI 계산 (공식: 체중 ÷ 키² )
-    3. 나이에 맞는 BMI 기준 가져오기
-    4. 저체중/정상/과체중/비만 판단
-    5. 적정 체중 범위 계산
-    6. 결과를 session_state에 저장
     """
     # 사용자가 입력한 값 가져오기
     height = st.session_state.user_height
@@ -206,7 +164,6 @@ def calculate_bmi():
     
     # --- 2단계: BMI 계산 ---
     # BMI 공식: 체중(kg) ÷ (키(m))²
-    # 예: 70kg, 170cm → 70 ÷ (1.7)² = 24.22
     height_m = height / 100.0  # cm를 m로 변환 (170cm → 1.7m)
     bmi = weight / (height_m ** 2)  # ** 2는 제곱을 의미
     
@@ -228,17 +185,16 @@ def calculate_bmi():
     
     # --- 5단계: 적정 체중 범위 계산 ---
     # 정상 BMI 범위로 역계산
-    # 예: BMI 18.5~22.9, 키 170cm → 53.5~66.2kg
     ideal_weight_min = criteria['normal_min'] * (height_m ** 2)
     ideal_weight_max = criteria['normal_max'] * (height_m ** 2)
     
     # --- 6단계: 결과 메시지 만들기 ---
-    # 상태 메시지 (예: "현재 사용자의 BMI는 24.22이며, 과체중입니다.")
+    # 상태 메시지
     status_msg = f"현재 사용자의 BMI는 {bmi:.2f}이며, {status}"
     
     # 적정 체중 정보 메시지
     recommended_msg = f"""
-
+    
     - 키: **{height:.0f}cm**
     - 정상 BMI 범위: **{criteria['normal_min']} ~ {criteria['normal_max']}**
     - 적정 체중 범위: **{ideal_weight_min:.1f}kg ~ {ideal_weight_max:.1f}kg**
@@ -266,6 +222,46 @@ def run_user_info():
         clear_results()
         st.session_state.current_page = 'user_info'
     
+    # 출력 카드와 유사한 디자인을 위해 number_input의 스타일을 변경합니다.
+    custom_css = """
+    <style>
+    /* 1. 입력 필드 컨테이너 스타일 (배경, 테두리, 둥근 모서리) */
+    /* stNumberInput 위젯의 베이스 입력 영역 타겟팅 */
+    div[data-testid*="stNumberInput"] > div[data-baseweb="base-input"] {
+        background: var(--card-bg); 
+        border-radius: 8px;
+        border: 1px solid var(--border-color);
+        padding: 0.5rem 0.5rem; /* 내부 패딩 조절 */
+    }
+
+    /* 2. 실제 숫자 입력 요소 폰트 크기 및 정렬 */
+    div[data-testid*="stNumberInput"] input {
+        font-size: 1.5rem !important; /* 출력 값 폰트 크기(1.5rem)와 통일 */
+        text-align: center; /* 텍스트 중앙 정렬 */
+        margin: 0.5rem 0; /* 상하 여백 추가 */
+        padding: 0 !important; /* 내부 패딩 제거 (컨테이너에서 처리) */
+    }
+
+    /* 3. 라벨 (키, 몸무게, 나이) 스타일: 출력 카드의 제목(h3)과 유사하게 */
+    div[data-testid*="stNumberInput"] > label {
+        text-align: center; /* 라벨 중앙 정렬 */
+        padding-bottom: 0.5rem; /* 아래쪽 여백 추가 */
+    }
+    div[data-testid*="stNumberInput"] label p {
+        color: var(--primary-color) !important; /* 라벨 색상 변경 (예: primary-color) */
+        font-size: 1rem !important; /* 라벨 폰트 크기 */
+        font-weight: bold;
+        margin: 0 !important;
+    }
+    
+    /* 4. 스크롤 버튼 영역 배경색 (선택 사항) */
+    div[data-baseweb="base-input"] > div:nth-child(2) {
+        background: var(--card-bg);
+    }
+    </style>
+    """
+    st.markdown(custom_css, unsafe_allow_html=True)
+    
     # --- 화면 제목 ---
     st.markdown("""
         <div style="text-align: center; padding: 2rem 0;">
@@ -288,15 +284,15 @@ def run_user_info():
     col1, col2, col3 = st.columns(3)
     
     with col1:
-        # 키 입력 필드
-        # on_change로 직접 session_state 업데이트
+        # 키 입력 필드 (label_visibility="hidden" 적용)
         height = st.number_input(
             '키(cm)', 
             min_value=140,
             max_value=250,
             step=1,
             value=st.session_state.user_height,
-            help="키는 140cm ~ 250cm 사이로 입력해주세요"
+            help="키는 140cm ~ 250cm 사이로 입력해주세요",
+            label_visibility="visible" # CSS로 라벨을 재정의하기 위해 visible 유지
         )
         # 값이 변경되면 session_state 업데이트
         if height != st.session_state.user_height:
@@ -304,37 +300,37 @@ def run_user_info():
             clear_results()
     
     with col2:
-        # 몸무게 입력 필드
+        # 몸무게 입력 필드 (label_visibility="hidden" 적용)
         weight = st.number_input(
             '몸무게(kg)', 
             min_value=40,
             max_value=200,
             step=1,
-            value=st.session_state.user_weight
+            value=st.session_state.user_weight,
+            label_visibility="visible"
         )
         if weight != st.session_state.user_weight:
             st.session_state.user_weight = weight
             clear_results()
     
     with col3:
-        # 나이 입력 필드
+        # 나이 입력 필드 (label_visibility="hidden" 적용)
         age = st.number_input(
             '나이', 
             min_value=1,
             max_value=100,
             step=1,
-            value=st.session_state.user_age
+            value=st.session_state.user_age,
+            label_visibility="visible"
         )
         if age != st.session_state.user_age:
             st.session_state.user_age = age
             clear_results()
     
     # --- BMI 계산 버튼 ---
-    # 버튼을 누르면 calculate_bmi() 함수가 실행됨
     st.button('BMI 계산 및 결과 확인', on_click=calculate_bmi, use_container_width=True)
     
     # --- 결과 표시 ---
-    # BMI가 계산되었을 때만 결과를 보여줌
     if st.session_state.bmi_result is not None:
         # BMI 결과 출력
         st.markdown("""
@@ -343,8 +339,8 @@ def run_user_info():
             </div>
         """, unsafe_allow_html=True)
         
-        col1, col2 = st.columns(2)
-        with col1:
+        col3, col4 = st.columns(2)
+        with col3:
             st.markdown(f"""
             <div class="custom-card" style="height: 240px;">
                 <div style="text-align: center;">
@@ -355,7 +351,7 @@ def run_user_info():
             </div>
             """, unsafe_allow_html=True)
         
-        with col2:
+        with col4:
             st.markdown(f"""
             <div class="custom-card" style="height: 100%;">
                 <div style="text-align: center;">
