@@ -194,7 +194,7 @@ def calculate_bmi():
     
     # 적정 체중 정보 메시지
     recommended_msg = f"""
-    
+
     - 키: **{height:.0f}cm**
     - 정상 BMI 범위: **{criteria['normal_min']} ~ {criteria['normal_max']}**
     - 적정 체중 범위: **{ideal_weight_min:.1f}kg ~ {ideal_weight_max:.1f}kg**
@@ -260,8 +260,7 @@ def run_user_info():
     }
     </style>
     """
-    st.markdown(custom_css, unsafe_allow_html=True)
-    
+
     # --- 화면 제목 ---
     st.markdown("""
         <div style="text-align: center; padding: 2rem 0;">
@@ -271,6 +270,8 @@ def run_user_info():
             </p>
         </div>
     """, unsafe_allow_html=True)
+    
+    st.markdown(custom_css, unsafe_allow_html=True)
     
     # --- 입력 섹션 ---
     st.markdown("""
