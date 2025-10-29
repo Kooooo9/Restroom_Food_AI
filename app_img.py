@@ -69,13 +69,13 @@ def run_img():
         </div>
     """, unsafe_allow_html=True)
     
-    file = st.file_uploader("", type=['jpg', 'jpeg', 'png'])
+    file = st.file_uploader("", type=['jpg', 'jpeg', 'png',  'gif', 'webp', 'bmp'])
     
     if not file:
         st.markdown("""
             <div class="custom-card" style="text-align: center;">
                 <h3 style="color: var(--primary-color);">👆 사진을 업로드해주세요</h3>
-                <p>지원 형식: JPG, JPEG, PNG</p>
+                <p>지원 형식: JPG, JPEG, PNG, gif, webp, bmp</p>
             </div>
         """, unsafe_allow_html=True)
         return
@@ -177,3 +177,4 @@ def run_img():
 
         st.markdown("### ⚠️ 주의사항")
         st.write(extract_section(finish, "⚠️ 주의사항"))
+        
