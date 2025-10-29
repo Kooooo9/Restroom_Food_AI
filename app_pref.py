@@ -13,6 +13,7 @@ def salty(natrium):
         return '짠맛'
     else:
         return '매우 짠맛'
+
 # 단맛 단계 
 def sweet(sugar):
     if sugar < 5:
@@ -28,6 +29,26 @@ def sweet(sugar):
 
 # streamlit
 def run_pref():
+    # 데이터프레임 스타일을 위한 CSS 추가
+    st.markdown("""
+    <style>
+        /* 데이터프레임이 컨테이너를 벗어나지 않도록 */
+        div[data-testid="column"] > div {
+            overflow-x: hidden;
+        }
+        
+        /* 데이터프레임 자체 스타일 */
+        div[data-testid="stDataFrame"] {
+            width: 100% !important;
+        }
+        
+        div[data-testid="stDataFrame"] > div {
+            width: 100% !important;
+            overflow-x: auto;
+        }
+    </style>
+    """, unsafe_allow_html=True)
+    
     df = pd.read_csv('./food1.csv')
     
     # 페이지 헤더
@@ -115,51 +136,39 @@ def run_pref():
             # 나트륨 데이터
             similar_salty = df.sort_values("나트륨차이").head(10)[["식품명", "나트륨(mg)"]]
             similar_salty["나트륨(mg)"] = similar_salty["나트륨(mg)"].astype(int)
-            similar_salty = similar_salty.reset_index(drop=True)  # 인덱스 제거
             
-            st.markdown("""
-            <div class="custom-card">
-                <h3 style="color: var(--accent-color); margin-bottom: 1rem;">🧂 비슷한 짠맛의 음식</h3>
-            """, unsafe_allow_html=True)
-            
-            st.dataframe(
-                similar_salty,
-                use_container_width=False,
-                width=710,
-                height=300,
-                hide_index=True,  # 인덱스 숨기기
-                column_config={
-                    "식품명": st.column_config.Column(width=550),
-                    "나트륨(mg)": st.column_config.Column(width=10)
-                }
-            )
-            
-            st.markdown("</div>", unsafe_allow_html=True)
+            with st.container():
+                st.markdown("""
+                <div class="custom-card">
+                    <h3 style="color: var(--accent-color); margin-bottom: 1rem;">🧂 비슷한 짠맛의 음식</h3>
+                </div>
+                """, unsafe_allow_html=True)
+                
+                st.dataframe(
+                    similar_salty,
+                    use_container_width=True,
+                    height=300,
+                    hide_index=True
+                )
 
         with col2:
             # 당류 데이터
             similar_sweet = df.sort_values("당류차이").head(10)[["식품명", "당류(g)"]]
             similar_sweet["당류(g)"] = similar_sweet["당류(g)"].round(1)
-            similar_sweet = similar_sweet.reset_index(drop=True)  # 인덱스 제거
             
-            st.markdown("""
-            <div class="custom-card">
-                <h3 style="color: var(--secondary-color); margin-bottom: 1rem;">🍯 비슷한 단맛의 음식</h3>
-            """, unsafe_allow_html=True)
-            
-            st.dataframe(
-                similar_sweet,
-                use_container_width=False,
-                width=710,
-                height=300,
-                hide_index=True,  # 인덱스 숨기기
-                column_config={
-                    "식품명": st.column_config.Column(width=550),
-                    "당류(g)": st.column_config.Column(width=10)
-                }
-            )
-            
-            st.markdown("</div>", unsafe_allow_html=True)
+            with st.container():
+                st.markdown("""
+                <div class="custom-card">
+                    <h3 style="color: var(--secondary-color); margin-bottom: 1rem;">🍯 비슷한 단맛의 음식</h3>
+                </div>
+                """, unsafe_allow_html=True)
+                
+                st.dataframe(
+                    similar_sweet,
+                    use_container_width=True,
+                    height=300,
+                    hide_index=True
+                )
 
     else:
         st.markdown("""
