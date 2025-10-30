@@ -1,11 +1,32 @@
 import streamlit as st
-from koreanize_matplotlib import koreanize
-koreanize()
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sb
 import plotly.express as px
+import matplotlib.pyplot as plt
+import platform
+
+system = platform.system()
+
+try:
+    if system == 'Windows':
+        from koreanize_matplotlib import koreanize
+    else:
+        if system == 'Darwin':
+            plt.rcParams['font.family'] = 'AppleGothic'
+        else:
+            plt.rcParams['font.family'] = 'DejaVu Sans'
+        plt.rcParams['axes.unicode_minus'] = False
+
+except ImportError:
+    if system == 'Darwin':
+        plt.rcParams['font.family'] = 'AppleGothic'
+    elif system == 'Windows':
+        plt.rcParams['font.family'] = 'Malgun Gothic'
+    else:
+        plt.rcParams['font.family'] = 'DejaVu Sans'
+    plt.rcParams['axes.unicode_minus'] = False
 
 def run_eda():
     df = pd.read_csv('./food1.csv')
