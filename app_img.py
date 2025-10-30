@@ -87,7 +87,7 @@ def run_img():
             <h2>🖼️ 분석할 이미지</h2>
         </div>
     """, unsafe_allow_html=True)
-    st.image(image, use_container_width=True)
+    st.image(image, width=800)
 
     model = load_model()
     with st.spinner("🤖 AI가 이미지를 분석 중입니다..."):
