@@ -10,7 +10,6 @@ def initialize_state():
     앱이 처음 실행될 때 필요한 변수들을 준비합니다.
     이미 값이 있으면 건드리지 않고, 없을 때만 기본값을 설정합니다.
     """
-    # 사용자 입력값 (없을 때만 기본값 설정)
     if 'user_height' not in st.session_state:
         st.session_state.user_height = 160
     
@@ -20,17 +19,15 @@ def initialize_state():
     if 'user_age' not in st.session_state:
         st.session_state.user_age = 25
     
-    # BMI 계산 결과 (없을 때만 초기화)
     if 'bmi_result' not in st.session_state:
         st.session_state.bmi_result = None
     
-    if 'status_message' not in st.session_state:
-        st.session_state.status_message = ""
+    if 'status_category' not in st.session_state:
+        st.session_state.status_category = ""
     
-    if 'recommended_weight' not in st.session_state:
-        st.session_state.recommended_weight = ""
+    if 'action_message' not in st.session_state:
+        st.session_state.action_message = ""
     
-    # 현재 어느 페이지인지 추적
     if 'current_page' not in st.session_state:
         st.session_state.current_page = 'user_info'
 
@@ -41,8 +38,8 @@ def clear_results():
     사용자가 입력한 키, 몸무게, 나이는 그대로 유지됩니다.
     """
     st.session_state.bmi_result = None
-    st.session_state.status_message = ""
-    st.session_state.recommended_weight = ""
+    st.session_state.status_category = ""
+    st.session_state.action_message = ""
 
 
 # ============================================================================
@@ -55,9 +52,7 @@ def get_user_data():
     다른 파일이나 함수에서 사용자 정보가 필요할 때 사용합니다.
     """
     try:
-        # 세션 상태가 초기화되어 있는지 확인
         if not all(key in st.session_state for key in ['user_height', 'user_weight', 'user_age', 'bmi_result']):
-            # 세션 상태가 초기화되지 않은 경우
             initialize_state()
             return {
                 'height': None,
@@ -66,7 +61,6 @@ def get_user_data():
                 'bmi': None
             }
         
-        # 세션 상태가 초기화된 경우
         return {
             'height': st.session_state.user_height,
             'weight': st.session_state.user_weight,
@@ -74,7 +68,6 @@ def get_user_data():
             'bmi': st.session_state.bmi_result
         }
     except Exception:
-        # 예기치 않은 오류 발생 시
         return {
             'height': None,
             'weight': None,
@@ -130,136 +123,250 @@ def get_bmi_criteria(age):
 
 
 # ============================================================================
-# 4. BMI 계산 함수
+# 4. 상태별 스타일 정의
+# ============================================================================
+
+def get_status_style(category):
+    """
+    BMI 상태에 따라 카드 스타일을 반환합니다.
+    """
+    styles = {
+        'underweight': {
+            'bg_color': '#E3F2FD',
+            'border_color': '#2196F3',
+            'icon': '📉',
+            'title': '저체중',
+            'color': '#1976D2'
+        },
+        'normal': {
+            'bg_color': '#E8F5E9',
+            'border_color': '#4CAF50',
+            'icon': '✅',
+            'title': '정상 체중',
+            'color': '#388E3C'
+        },
+        'overweight': {
+            'bg_color': '#FFF3E0',
+            'border_color': '#FF9800',
+            'icon': '⚠️',
+            'title': '과체중',
+            'color': '#F57C00'
+        },
+        'obese': {
+            'bg_color': '#FFEBEE',
+            'border_color': '#F44336',
+            'icon': '🚨',
+            'title': '비만',
+            'color': '#D32F2F'
+        }
+    }
+    return styles.get(category, styles['normal'])
+
+
+# ============================================================================
+# 5. BMI 계산 함수
 # ============================================================================
 
 def calculate_bmi():
     """
     사용자가 입력한 정보로 BMI를 계산합니다.
-    'BMI 계산 및 결과 확인' 버튼을 누르면 이 함수가 실행됩니다.
     """
-    # 사용자가 입력한 값 가져오기
     height = st.session_state.user_height
     weight = st.session_state.user_weight
     age = st.session_state.user_age
     
-    # --- 1단계: 입력값 검사 ---
-    # 키가 너무 작거나 크면 에러
+    # --- 입력값 검사 ---
     if not height or height < 140 or height > 250:
         st.error("키는 140cm ~ 250cm 사이로 입력해주세요.")
         clear_results()
         return
     
-    # 몸무게가 너무 작거나 크면 에러
     if not weight or weight < 40 or weight > 200:
         st.error("몸무게는 40kg ~ 200kg 사이로 입력해주세요.")
         clear_results()
         return
     
-    # 나이가 범위를 벗어나면 에러
     if not age or age < 1 or age > 100:
         st.error("나이는 1세 ~ 100세 사이로 입력해주세요.")
         clear_results()
         return
     
-    # --- 2단계: BMI 계산 ---
-    # BMI 공식: 체중(kg) ÷ (키(m))²
-    height_m = height / 100.0  # cm를 m로 변환 (170cm → 1.7m)
-    bmi = weight / (height_m ** 2)  # ** 2는 제곱을 의미
-    
-    # 계산된 BMI 저장
+    # --- BMI 계산 ---
+    height_m = height / 100.0
+    bmi = weight / (height_m ** 2)
     st.session_state.bmi_result = bmi
     
-    # --- 3단계: 나이에 맞는 BMI 기준 가져오기 ---
+    # --- 나이에 맞는 BMI 기준 가져오기 ---
     criteria = get_bmi_criteria(age)
     
-    # --- 4단계: BMI로 상태 판단하기 ---
+    # --- BMI 상태 판단 ---
     if bmi < criteria['underweight']:
-        status = "저체중입니다."
+        st.session_state.status_category = 'underweight'
     elif bmi < criteria['normal_max']:
-        status = "정상 체중입니다."
+        st.session_state.status_category = 'normal'
     elif bmi <= criteria['overweight_max']:
-        status = "과체중입니다."
+        st.session_state.status_category = 'overweight'
     else:
-        status = "비만입니다."
+        st.session_state.status_category = 'obese'
     
-    # --- 5단계: 적정 체중 범위 계산 ---
-    # 정상 BMI 범위로 역계산
+    # --- 적정 체중 범위 계산 ---
     ideal_weight_min = criteria['normal_min'] * (height_m ** 2)
     ideal_weight_max = criteria['normal_max'] * (height_m ** 2)
+    ideal_weight_mid = (ideal_weight_min + ideal_weight_max) / 2
     
-    # --- 6단계: 결과 메시지 만들기 ---
-    # 상태 메시지
-    status_msg = f"현재 사용자의 BMI는 {bmi:.2f}이며, {status}"
-    
-    # 적정 체중 정보 메시지
-    recommended_msg = f"""
-
-    - 키: **{height:.0f}cm**
-    - 정상 BMI 범위: **{criteria['normal_min']} ~ {criteria['normal_max']}**
-    - 적정 체중 범위: **{ideal_weight_min:.1f}kg ~ {ideal_weight_max:.1f}kg**
-    """
-    
-    # 결과를 session_state에 저장 (화면에 표시하기 위해)
-    st.session_state.status_message = status_msg
-    st.session_state.recommended_weight = recommended_msg
+    # --- 액션 메시지 생성 ---
+    if st.session_state.status_category == 'underweight':
+        weight_diff = ideal_weight_mid - weight
+        st.session_state.action_message = f"""
+        <div class="status-value" style="font-size: 2.5rem; font-weight: bold; margin: 1.5rem 0;">
+            +{weight_diff:.1f}kg
+        </div>
+        <div style="font-size: 0.9rem; color: var(--text-color); opacity: 0.7;">증량이 필요합니다</div>
+        """
+    elif st.session_state.status_category == 'normal':
+        st.session_state.action_message = f"""
+        <div class="status-value" style="font-size: 2rem; font-weight: bold; margin: 1.5rem 0;">
+            완벽합니다! 🎉
+        </div>
+        <div style="font-size: 0.9rem; color: var(--text-color); opacity: 0.7;">현재 체중을 유지하세요</div>
+        """
+    elif st.session_state.status_category == 'overweight':
+        weight_diff = weight - ideal_weight_max
+        st.session_state.action_message = f"""
+        <div class="status-value" style="font-size: 2.5rem; font-weight: bold; margin: 1.5rem 0;">
+            -{weight_diff:.1f}kg
+        </div>
+        <div style="font-size: 0.9rem; color: var(--text-color); opacity: 0.7;">감량을 권장합니다</div>
+        """
+    else:  # obese
+        weight_diff = weight - ideal_weight_max
+        st.session_state.action_message = f"""
+        <div class="status-value" style="font-size: 2.5rem; font-weight: bold; margin: 1.5rem 0;">
+            -{weight_diff:.1f}kg
+        </div>
+        <div style="font-size: 0.9rem; color: var(--text-color); opacity: 0.7;">감량이 필요합니다</div>
+        """
 
 
 # ============================================================================
-# 5. 화면 구성 (메인 UI)
+# 6. 화면 구성 (메인 UI)
 # ============================================================================
 
 def run_user_info():
     """
     BMI 계산기 화면을 만듭니다.
-    이 함수를 호출하면 전체 화면이 나타납니다.
     """
-    # 앱 시작 시 필요한 변수들 준비 (없으면 생성, 있으면 유지)
     initialize_state()
     
-    # 다른 페이지에서 돌아왔을 때만 결과 초기화
     if st.session_state.current_page != 'user_info':
         clear_results()
         st.session_state.current_page = 'user_info'
     
-    # 출력 카드와 유사한 디자인을 위해 number_input의 스타일을 변경합니다.
+    # 커스텀 CSS
     custom_css = """
     <style>
-    /* 1. 입력 필드 컨테이너 스타일 (배경, 테두리, 둥근 모서리) */
-    /* stNumberInput 위젯의 베이스 입력 영역 타겟팅 */
+    /* 입력 필드 스타일 */
     div[data-testid*="stNumberInput"] > div[data-baseweb="base-input"] {
         background: var(--card-bg); 
         border-radius: 8px;
         border: 1px solid var(--border-color);
-        padding: 0.5rem 0.5rem; /* 내부 패딩 조절 */
+        padding: 0.5rem 0.5rem;
     }
 
-    /* 2. 실제 숫자 입력 요소 폰트 크기 및 정렬 */
     div[data-testid*="stNumberInput"] input {
-        font-size: 1.5rem !important; /* 출력 값 폰트 크기(1.5rem)와 통일 */
-        text-align: center; /* 텍스트 중앙 정렬 */
-        margin: 0.5rem 0; /* 상하 여백 추가 */
-        padding: 0 !important; /* 내부 패딩 제거 (컨테이너에서 처리) */
+        font-size: 1.5rem !important;
+        text-align: center;
+        margin: 0.5rem 0;
+        padding: 0 !important;
     }
 
-    /* 3. 라벨 (키, 몸무게, 나이) 스타일: 출력 카드의 제목(h3)과 유사하게 */
     div[data-testid*="stNumberInput"] > label {
-        text-align: center; /* 라벨 중앙 정렬 */
-        padding-bottom: 0.5rem; /* 아래쪽 여백 추가 */
+        text-align: center;
+        padding-bottom: 0.5rem;
     }
     div[data-testid*="stNumberInput"] label p {
-        color: var(--primary-color) !important; /* 라벨 색상 변경 (예: primary-color) */
-        font-size: 1rem !important; /* 라벨 폰트 크기 */
+        color: var(--primary-color) !important;
+        font-size: 1rem !important;
         font-weight: bold;
         margin: 0 !important;
     }
     
-    /* 4. 스크롤 버튼 영역 배경색 (선택 사항) */
     div[data-baseweb="base-input"] > div:nth-child(2) {
         background: var(--card-bg);
     }
+    
+    /* 상태별 색상 - 라이트 테마 */
+    .status-underweight {
+        border: 3px solid #2196F3;
+    }
+    .status-underweight .status-icon { color: #2196F3; }
+    .status-underweight .status-title { color: #1976D2; }
+    .status-underweight .status-value { color: #1976D2; }
+    
+    .status-normal {
+        border: 3px solid #4CAF50;
+    }
+    .status-normal .status-icon { color: #4CAF50; }
+    .status-normal .status-title { color: #388E3C; }
+    .status-normal .status-value { color: #388E3C; }
+    
+    .status-overweight {
+        border: 3px solid #FF9800;
+    }
+    .status-overweight .status-icon { color: #FF9800; }
+    .status-overweight .status-title { color: #F57C00; }
+    .status-overweight .status-value { color: #F57C00; }
+    
+    .status-obese {
+        border: 3px solid #F44336;
+    }
+    .status-obese .status-icon { color: #F44336; }
+    .status-obese .status-title { color: #D32F2F; }
+    .status-obese .status-value { color: #D32F2F; }
+    
+    /* 다크 테마일 때 */
+    @media (prefers-color-scheme: dark) {
+        .status-underweight .status-icon { color: #64B5F6; }
+        .status-underweight .status-title { color: #64B5F6; }
+        .status-underweight .status-value { color: #64B5F6; }
+        
+        .status-normal .status-icon { color: #81C784; }
+        .status-normal .status-title { color: #81C784; }
+        .status-normal .status-value { color: #81C784; }
+        
+        .status-overweight .status-icon { color: #FFB74D; }
+        .status-overweight .status-title { color: #FFB74D; }
+        .status-overweight .status-value { color: #FFB74D; }
+        
+        .status-obese .status-icon { color: #E57373; }
+        .status-obese .status-title { color: #E57373; }
+        .status-obese .status-value { color: #E57373; }
+    }
+    
+    .info-box {
+        margin-top: 1rem;
+        padding: 1rem;
+        background: var(--background-color);
+        border-radius: 8px;
+        border: 1px solid var(--border-color);
+    }
+    
+    /* 결과 카드만 높이 통일 */
+    .result-card {
+        min-height: 280px;
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .result-card > div {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+    }
     </style>
     """
+    st.markdown(custom_css, unsafe_allow_html=True)
 
     # --- 화면 제목 ---
     st.markdown("""
@@ -280,12 +387,10 @@ def run_user_info():
         </div>
     """, unsafe_allow_html=True)
     
-    st.markdown(custom_css, unsafe_allow_html=True)
-    # --- 입력 필드 (가로로 3개 배치) ---
+    # --- 입력 필드 ---
     col1, col2, col3 = st.columns(3)
 
     with col1:
-        # 키 입력 필드 (label_visibility="hidden" 적용)
         height = st.number_input(
             '키(cm)', 
             min_value=140,
@@ -293,15 +398,13 @@ def run_user_info():
             step=1,
             value=st.session_state.user_height,
             help="키는 140cm ~ 250cm 사이로 입력해주세요",
-            label_visibility="visible" # CSS로 라벨을 재정의하기 위해 visible 유지
+            label_visibility="visible"
         )
-        # 값이 변경되면 session_state 업데이트
         if height != st.session_state.user_height:
             st.session_state.user_height = height
             clear_results()
     
     with col2:
-        # 몸무게 입력 필드 (label_visibility="hidden" 적용)
         weight = st.number_input(
             '몸무게(kg)', 
             min_value=40,
@@ -315,7 +418,6 @@ def run_user_info():
             clear_results()
     
     with col3:
-        # 나이 입력 필드 (label_visibility="hidden" 적용)
         age = st.number_input(
             '나이', 
             min_value=1,
@@ -333,31 +435,54 @@ def run_user_info():
     
     # --- 결과 표시 ---
     if st.session_state.bmi_result is not None:
-        # BMI 결과 출력
+        style = get_status_style(st.session_state.status_category)
+        criteria = get_bmi_criteria(st.session_state.user_age)
+        
         st.markdown("""
             <div class="custom-card">
                 <h2 style="color: var(--primary-color);">BMI 계산 결과</h2>
             </div>
         """, unsafe_allow_html=True)
         
-        col3, col4 = st.columns(2)
-        with col3:
+        col1, col2, col3 = st.columns(3)
+        
+        # BMI 수치 카드 (왼쪽)
+        with col1:
             st.markdown(f"""
-            <div class="custom-card" style="height: 240px;">
+            <div class="custom-card result-card">
                 <div style="text-align: center;">
                     <h3 style="color: var(--accent-color); margin-bottom: 1rem;">📊 BMI 수치</h3>
-                    <div style="font-size: 1.5rem; font-weight: bold; margin: 1rem 0;">{st.session_state.bmi_result:.1f}</div>
-                    <div style="color: var(--text-color);">{st.session_state.status_message}</div>
+                    <div class="status-value" style="font-size: 3rem; font-weight: bold; margin: 1rem 0;">
+                        {st.session_state.bmi_result:.1f}
+                    </div>
+                    <div style="font-size: 0.9rem; color: var(--text-color); opacity: 0.7;">
+                        정상 범위: {criteria['normal_min']} ~ {criteria['normal_max']}
+                    </div>
                 </div>
             </div>
             """, unsafe_allow_html=True)
         
-        with col4:
+        # 상태 카드 (가운데)
+        with col2:
             st.markdown(f"""
-            <div class="custom-card" style="height: 100%;">
+            <div class="custom-card result-card status-{st.session_state.status_category}">
                 <div style="text-align: center;">
-                    <h3 style="color: var(--secondary-color); margin-bottom: 1rem;">⚖️ 적정 체중 정보</h3>
-                    <div style="text-align: left;">{st.session_state.recommended_weight}</div>
+                    <div class="status-icon" style="font-size: 4rem; margin-bottom: 1rem;">{style['icon']}</div>
+                    <div class="status-title" style="font-size: 1.8rem; font-weight: bold; margin-bottom: 0.5rem;">
+                        {style['title']}
+                    </div>
+                    <div style="font-size: 0.9rem; color: var(--text-color); margin-top: 1rem; opacity: 0.7;">
+                        {criteria['age_group']} 기준
+                    </div>
                 </div>
             </div>
+            """, unsafe_allow_html=True)
+        
+        # 액션 카드 (오른쪽)
+        with col3:
+            st.markdown(f"""
+            <div class="custom-card result-card">
+                <div style="text-align: center;">
+                    <h3 style="color: var(--secondary-color); margin-bottom: 1rem;">🎯 권장 사항</h3>
+                    {st.session_state.action_message}
             """, unsafe_allow_html=True)
