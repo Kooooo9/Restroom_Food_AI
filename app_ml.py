@@ -1,136 +1,130 @@
 import streamlit as st
-import pandas as pd
-import numpy as np
+import os
+import google.generativeai as genai
 
-from app_user_info import get_user_data
+# Gemini API 설정
+GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")  # 실제 API 키로 교체 필요
+genai.configure(api_key=GOOGLE_API_KEY)
+model = genai.GenerativeModel('gemini-2.5-flash')
 
-def meal_plan(df, kcal, carb, protein, fat, meal_count):
-    carb = (kcal * (carb / 100)) / 4
-    protein = (kcal * (protein / 100)) / 4
-    fat = (kcal * (fat / 100)) / 9
-# 영양소가 1g당 제공하는 칼로리가 달라 g을 계산하는 공식 추가해뒀습니다.
-# 탄수화물, 단백질 = 1g 당 4kcal, 지방 = 1g당 9kcal
-        
+def get_ai_diet_recommendation(bmi: float, preferences: list, avoid_foods: list) -> str:
+    """AI를 통한 맞춤형 식단 추천"""
+    
+    # BMI 카테고리 결정
+    bmi_category = "저체중" if bmi < 18.5 else "정상" if bmi < 25 else "과체중" if bmi < 30 else "비만"
+    
+    prompt = f"""
+    다음 조건에 맞는 하루 식단을 추천해주세요:
+    
+    - BMI: {bmi:.1f} ({bmi_category})
+    - 선호하는 음식: {', '.join(preferences) if preferences else '없음'}
+    - 피해야 할 음식: {', '.join(avoid_foods) if avoid_foods else '없음'}
+    
+    다음 형식으로 자세히 응답해주세요:
+    
+    ### 🌅 아침
+    - 추천 식단:
+    - 예상 칼로리:
+    - 추천 이유:
+    
+    ### 🌞 점심
+    - 추천 식단:
+    - 예상 칼로리:
+    - 추천 이유:
+    
+    ### 🌙 저녁
+    - 추천 식단:
+    - 예상 칼로리:
+    - 추천 이유:
+    
+    ### 💡 전체적인 식단 구성 이유:
+    
+    ### ⚠️ 주의사항:
+    """
+    
+    try:
+        response = model.generate_content(prompt)
+        return response.text
+    except Exception as e:
+        return f"식단 생성 중 오류가 발생했습니다: {str(e)}"
+
 def run_ml():
-    df = pd.read_csv('./food1.csv')
+    st.set_page_config(page_title="AI 맞춤 식단 생성기", layout="wide")
     
-    # 페이지 헤더
-    st.markdown("""
-        <div style="text-align: center; padding: 2rem 0;">
-            <h1 style="color: var(--primary-color);">AI 맞춤 식단 생성</h1>
-            <p style="color: var(--text-color); font-size: 1.2rem;">
-                AI가 당신의 건강 정보와 선호도를 기반으로 최적의 식단을 구성해드립니다
-            </p>
-        </div>
-    """, unsafe_allow_html=True)
-
-    # 사용자 정보 섹션
-    user_data = get_user_data()
-    height = user_data.get('height')
-    weight = user_data.get('weight')
-    age = user_data.get('age')
-    bmi = user_data.get('bmi')
-
-    if height is None or weight is None or age is None or bmi is None:
-        st.warning("⚠️ 사용자 정보가 필요합니다. 상단 메뉴의 '사용자 정보 입력'에서 정보를 입력해주세요.")
-        st.stop()  # 여기서 실행을 중단합니다.
-
-    st.markdown("""
-        <div class="custom-card">
-            <h2>👤 사용자 정보</h2>
-        </div>
-    """, unsafe_allow_html=True)
-
-    col1, col2, col3, col4 = st.columns(4)
+    # 헤더
+    st.title('🍽️ AI 맞춤 식단 생성기')
+    st.markdown('### 당신의 BMI와 식품 선호도에 맞는 맞춤형 식단을 추천해드립니다.')
+    
+    # 사용자 정보 입력
+    col1, col2 = st.columns(2)
+    
     with col1:
-        st.markdown(f"""
-        <div style="background: var(--card-bg); padding: 1rem; border-radius: 8px; border: 1px solid var(--border-color); text-align: center;">
-            <h3 style="color: var(--primary-color); margin: 0;">키</h3>
-            <p style="font-size: 1.5rem; margin: 0.5rem 0;">{height} cm</p>
-        </div>
-        """, unsafe_allow_html=True)
+        st.markdown("### 📊 BMI 정보")
+        bmi = st.number_input(
+            "BMI 수치를 입력해주세요",
+            min_value=10.0,
+            max_value=50.0,
+            value=22.0,
+            step=0.1,
+            help="BMI = 체중(kg) / (신장(m))²"
+        )
+        
+        # BMI 상태 표시
+        bmi_status = "저체중" if bmi < 18.5 else "정상" if bmi < 25 else "과체중" if bmi < 30 else "비만"
+        status_color = {
+            "저체중": "blue",
+            "정상": "green",
+            "과체중": "orange",
+            "비만": "red"
+        }
+        st.markdown(f"**BMI 상태:** {bmi_status}")
+        st.progress(min(bmi/40, 1.0))  # BMI 시각화
+        
+        # BMI 설명
+        st.info("""
+        💡 **BMI 범위 안내**
+        - 저체중: 18.5 미만
+        - 정상: 18.5 ~ 24.9
+        - 과체중: 25 ~ 29.9
+        - 비만: 30 이상
+        """)
     
     with col2:
-        st.markdown(f"""
-        <div style="background: var(--card-bg); padding: 1rem; border-radius: 8px; border: 1px solid var(--border-color); text-align: center;">
-            <h3 style="color: var(--secondary-color); margin: 0;">체중</h3>
-            <p style="font-size: 1.5rem; margin: 0.5rem 0;">{weight} kg</p>
-        </div>
-        """, unsafe_allow_html=True)
-    
-    with col3:
-        st.markdown(f"""
-        <div style="background: var(--card-bg); padding: 1rem; border-radius: 8px; border: 1px solid var(--border-color); text-align: center;">
-            <h3 style="color: var(--accent-color); margin: 0;">나이</h3>
-            <p style="font-size: 1.5rem; margin: 0.5rem 0;">{age} 세</p>
-        </div>
-        """, unsafe_allow_html=True)
-    
-    with col4:
-        st.markdown(f"""
-        <div style="background: var(--card-bg); padding: 1rem; border-radius: 8px; border: 1px solid var(--border-color); text-align: center;">
-            <h3 style="color: var(--primary-color); margin: 0;">BMI</h3>
-            <p style="font-size: 1.5rem; margin: 0.5rem 0;">{bmi:.1f}</p>
-        </div>
-        """, unsafe_allow_html=True)
-
-    # 식단 설정 섹션
-    st.markdown("""
-        <div class="custom-card">
-            <h2>🎯 목표 설정</h2>
-            <p>원하는 영양소 비율과 끼니 수를 설정하세요.</p>
-        </div>
-    """, unsafe_allow_html=True)
-
-    kcal = st.number_input('목표 칼로리 (kcal)', 1000, 6000, 2500, step=50,
-                          help="하루 목표 칼로리를 입력하세요")
-
-    col0, col1, col2, col3 = st.columns(4)
-    with col0:
-        meal_count = st.slider("끼니 수", 1, 5, 3,
-                             help="하루 몇 끼로 나눌지 선택하세요")
-    with col1:
-        carb = st.slider('탄수화물 (%)', 10, 80, 50,
-                        help="탄수화물 비율을 선택하세요")
-    with col2:
-        protein = st.slider('단백질 (%)', 10, 50, 30,
-                          help="단백질 비율을 선택하세요")
-    with col3:
-        fat = st.slider('지방 (%)', 10, 50, 20,
-                       help="지방 비율을 선택하세요")
-
-    # 제외 식품 설정
-    st.markdown("""
-        <div class="custom-card">
-            <h2>⚠️ 제외할 음식</h2>
-            <p>알레르기나 선호하지 않는 음식을 입력하세요.</p>
-        </div>
-    """, unsafe_allow_html=True)
-
-    input = st.text_input("피해야 할 음식 (쉼표로 구분)", 
-                         "우유, 땅콩",
-                         key="피해야 할 음식",
-                         help="피하고 싶은 음식을 쉼표(,)로 구분하여 입력하세요")
-
-    # 실행 버튼
-    st.markdown("""
-        <div style="text-align: center; padding: 2rem 0;">
-            <button class="stButton">
-                <span>🤖 AI 식단 생성하기</span>
-            </button>
-        </div>
-    """, unsafe_allow_html=True)
-
-    if st.button("식단 생성", key="generate_diet"):
-        avoid_foods = [x.strip() for x in input.split(',') if x.strip()]
-        df_filtered = df[~df['식품명'].str.contains('|'.join(avoid_foods), na=False)]
+        st.markdown("### 🍳 식단 선호도")
+        preferences = st.text_area(
+            "선호하는 음식을 입력해주세요 (쉼표로 구분)",
+            placeholder="예: 연어, 닭가슴살, 브로콜리",
+            help="좋아하는 음식이나 자주 먹고 싶은 음식을 입력하세요."
+        )
         
-        st.markdown("""
-            <div class="custom-card">
-                <h2>🍽️ AI 추천 식단</h2>
-                <p>당신의 건강 정보와 선호도를 반영한 맞춤형 식단입니다.</p>
-            </div>
-        """, unsafe_allow_html=True)
+        avoid_foods = st.text_area(
+            "피해야 할 음식을 입력해주세요 (쉼표로 구분)",
+            placeholder="예: 땅콩, 우유, 새우",
+            help="알레르기가 있거나 건강상 피해야 하는 음식을 입력하세요."
+        )
         
+        # 입력값 처리
+        pref_list = [food.strip() for food in preferences.split(',') if food.strip()]
+        avoid_list = [food.strip() for food in avoid_foods.split(',') if food.strip()]
+    
+    # 구분선
+    st.divider()
+    
+    # 식단 생성 버튼
+    if st.button("🤖 AI 맞춤 식단 생성하기", type="primary"):
+        with st.spinner("AI가 맞춤형 식단을 생성하고 있습니다..."):
+            recommendation = get_ai_diet_recommendation(bmi, pref_list, avoid_list)
+            
+            # 결과 표시
+            st.markdown(recommendation)
+            
+            # 주의사항
+            st.info("""
+            💡 **참고사항**
+            - 이 식단은 참고용이며, 실제 섭취 시에는 개인의 건강 상태를 고려해주세요.
+            - 특별한 건강 상태나 질환이 있다면 반드시 의사와 상담 후 섭취하세요.
+            - 식단은 매일 다양하게 구성하는 것이 좋습니다.
+            """)
+
 if __name__ == "__main__":
     run_ml()
