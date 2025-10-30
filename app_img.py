@@ -118,7 +118,7 @@ def run_img():
             <h2>🖼️ 분석할 이미지</h2>
         </div>
     """, unsafe_allow_html=True)
-    st.image(image, use_container_width=True)
+    st.image(image, width=800)
 
     # ⭐ 3. '분석 시작' 버튼과 AI 분석 로직
     if st.button("🚀 AI 영양 분석 시작", type="primary"):
