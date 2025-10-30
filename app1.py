@@ -3,7 +3,7 @@ from streamlit.components.v1 import html
 import streamlit.components.v1 as components
 
 from app_user_info import run_user_info
-from app_pref import run_pref
+# from app_pref import run_pref
 from app_eda import run_eda
 from app_ml import run_ml
 from app_img import run_img
@@ -198,10 +198,11 @@ def main():
         menu_icons = {
             "홈": "🏠",
             "사용자 정보 입력": "👤",
-            "내 맛 선호도 입력": "🌶️",
+            "AI 맞춤 식단 설정": "🍱",
             "음식 영양 정보 보기": "📊",
-            "맞춤 식단 설정": "🍱",
-            "AI 음식 분석기": "🤖"
+            "AI 음식 영양 분석기": "🤖",
+            # "내 맛 선호도 입력": "🌶️"
+            
         }
         
         menu = list(menu_icons.keys())
@@ -313,17 +314,7 @@ def main():
             
         with col2:
             st.markdown("""
-            <div class="custom-card">
-                <div style="display: flex; align-items: start;">
-                    <div style="background-color: var(--accent-color); color: white; padding: 1rem; border-radius: 12px; margin-right: 1rem;">
-                        🌶️
-                    </div>
-                    <div>
-                        <h3 style="margin: 0;">맛 선호도 분석</h3>
-                        <p>개인의 맛 선호도를 분석하여 취향에 맞는 음식을 추천해드립니다.</p>
-                    </div>
-                </div>
-            </div>
+            
             
             <div class="custom-card">
                 <div style="display: flex; align-items: start;">
@@ -350,14 +341,15 @@ def main():
             
     elif "사용자 정보" in choice:
         run_user_info()
-    elif "맛 선호도" in choice:
-        run_pref()
-    elif "영양 정보" in choice:
-        run_eda()
     elif "식단 설정" in choice:
         run_ml()
+    elif "영양 정보" in choice:
+        run_eda()
     elif "분석기" in choice:
         run_img()
+    # elif "맛 선호도" in choice:
+        # run_pref()
+
 
 if __name__ == "__main__":
     main()
