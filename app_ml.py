@@ -8,7 +8,7 @@ from app_user_info import get_user_data, get_bmi_criteria
 
 
 # 제미나이 API 키 불러오기
-api_key=st.secrets["GOOGLE_API_KEY"]
+api_key=st.secrets["GEMINI_API_KEY"]
 genai.configure(api_key=api_key)
 model = genai.GenerativeModel('gemini-2.5-flash')
 
