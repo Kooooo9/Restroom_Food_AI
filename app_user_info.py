@@ -487,3 +487,10 @@ def run_user_info():
                     <h3 style="color: var(--secondary-color); margin-bottom: 1rem;">🎯 권장 사항</h3>
                     {st.session_state.action_message}
             """, unsafe_allow_html=True)
+        
+        # --- 다음 단계 버튼 ---
+        st.markdown("<div style='margin-top: 2rem;'></div>", unsafe_allow_html=True)
+        
+        if st.button('🍱 AI 맞춤 식단 추천받기', key='goto_ml', use_container_width=True, type='primary'):
+            st.session_state.menu_choice = 'AI 맞춤 식단 설정'
+            st.rerun()

@@ -7,7 +7,7 @@ from PIL import Image
 from sklearn.ensemble import GradientBoostingRegressor 
 import re
 
-# =========================================================================
+# =S=======================================================================
 # 1. 환경 설정 및 헬퍼 함수
 # =========================================================================
 
@@ -16,17 +16,12 @@ import re
 def load_model():
     """Gemini AI 모델을 로드합니다."""
     # API 키 로딩 로직 유지
-    api_key = os.getenv("GEMINI_API_KEY")
-    if not api_key:
-        # Streamlit Secrets에서 로드 시도
-        if "GEMINI_API_KEY" in st.secrets:
-             api_key = st.secrets["GEMINI_API_KEY"]
-        else:
-             st.error("⚠️ GEMINI_API_KEY 환경 변수 또는 Streamlit Secrets를 설정해주세요.")
-             return None
-             
+    api_key=st.secrets["GEMINI_API_KEY"]
     genai.configure(api_key=api_key)
-    return genai.GenerativeModel("gemini-2.5-flash")
+    # --- [유지] ---
+    # gemini-2.5-flash 모델 유지
+    return genai.GenerativeModel("gemini-2.5-flash") 
+    # --- [유지 끝] ---
 
 def extract_number(text, keyword):
     """AI 응답 텍스트에서 특정 키워드의 숫자 값을 추출합니다."""
@@ -53,9 +48,12 @@ def train_regression_model():
     """Gradient Boosting Regressor 모델을 학습시킵니다."""
     try:
         # food1.csv 파일 경로가 현재 디렉토리에 있다고 가정
-        df = pd.read_csv("./food1.csv")
+        # streamlit cloud 배포 시 경로 문제 방지를 위해 os.path.join 사용 고려
+        base_dir = os.path.dirname(__file__)
+        file_path = os.path.join(base_dir, "food1.csv")
+        df = pd.read_csv(file_path)
     except FileNotFoundError:
-        st.error("❌ food1.csv 파일을 찾을 수 없습니다. 파일 경로를 확인해주세요.")
+        st.error("❌ food1.csv 파일을 찾을 수 없습니다. 파일이 앱의 루트 디렉토리에 있는지 확인해주세요.")
         return None
         
     X = df[["탄수화물(g)", "단백질(g)", "지방(g)", "당류(g)", "나트륨(mg)"]]
@@ -118,7 +116,10 @@ def run_img():
             <h2>🖼️ 분석할 이미지</h2>
         </div>
     """, unsafe_allow_html=True)
-    st.image(image, width=800)
+    # --- [유지] ---
+    # width=800 유지
+    st.image(image, width=800) 
+    # --- [유지 끝] ---
 
     # ⭐ 3. '분석 시작' 버튼과 AI 분석 로직
     if st.button("🚀 AI 영양 분석 시작", type="primary"):
@@ -177,11 +178,17 @@ def run_img():
                 </div>
             """, unsafe_allow_html=True)
             
+            # --- [수정 유지 1: 음식 이름만 추출] ---
+            food_name_text = extract_section(finish, "🍽 음식 이름:", "🔥 영양정보 (1인분 기준)")
+            
+            # --- [음식 이름 출력 (깔끔한 디자인 유지)] ---
             st.markdown(f"""
-                <div class="custom-card" style="background-color: var(--card-bg); padding: 1rem;">
-                    {finish}
+                <div class="custom-card" style="background-color: var(--card-bg); padding: 1rem; text-align: center;">
+                    <h2 style="margin: 0; color: var(--text-color); font-weight: 700;">{food_name_text}</h2>
                 </div>
             """, unsafe_allow_html=True)
+            # --- [수정 완료] ---
+
 
             # 영양소 값 추출
             kcal = extract_number(finish, "열량")
@@ -195,10 +202,12 @@ def run_img():
             st.markdown("""
                 <div class="custom-card">
                     <h2>📊 영양소 분석</h2>
-                    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-top: 1rem;">
+                </div>
             """, unsafe_allow_html=True)
 
-            cols = st.columns(3)
+            # --- [수정 유지 2: 카드 간 수평/수직 간격 적용] ---
+            cols = st.columns(3, gap="medium") 
+            # --- [수정 유지 끝 2] ---
             
             nutrient_data = [
                 {"name": "열량", "value": kcal, "unit": "kcal", "icon": "🔥", "color": "primary"},
@@ -211,25 +220,88 @@ def run_img():
 
             for i, nutrient in enumerate(nutrient_data):
                 with cols[i % 3]:
+                    # --- [수정 유지 3: 카드 간 수직 간격 적용] ---
                     st.markdown(f"""
-                        <div style="background: var(--card-bg); padding: 1rem; border-radius: 8px; border: 1px solid var(--border-color); text-align: center;">
+                        <div style="background: var(--card-bg); padding: 1rem; border-radius: 8px; border: 1px solid var(--border-color); text-align: center; margin-bottom: 1rem;">
                             <h3 style="color: var(--{nutrient['color']}-color); margin: 0;">{nutrient['icon']} {nutrient['name']}</h3>
-                            <p style="font-size: 1.5rem; margin: 0.5rem 0;">{nutrient['value']} {nutrient['unit']}</p>
+                            <p style="font-size: 1.5rem; margin: 0.5rem 0;">{nutrient['value'] if nutrient['value'] is not None else 'N/A'} {nutrient['unit']}</p>
                         </div>
                     """, unsafe_allow_html=True)
+                    # --- [수정 유지 끝 3] ---
 
             # Gradient Boosting Model을 사용한 칼로리 보정
             if all(v is not None for v in [carbo, protein, fat, sugar, sodium]):
                 new_data = pd.DataFrame([[carbo, protein, fat, sugar, sodium]], 
                                         columns=["탄수화물(g)", "단백질(g)", "지방(g)", "당류(g)", "나트륨(mg)"])
                 corrected_kcal = regressor.predict(new_data)[0]
-                st.success(f"🎯 예상 칼로리 kcal: **{corrected_kcal:.2f} kcal**")
+                
+                # 보정된 칼로리 결과 표시
+                st.markdown(f"""
+                    <div class="custom-card" style="background-color: var(--card-bg); padding: 1rem; text-align: center;">
+                        <h3 style="color: var(--primary-color);">✨ 칼로리 추정</h3>
+                        <p style="font-size: 1.2rem;">AI 추정 칼로리: {kcal} kcal</p>
+                        <p style="font-size: 1.2rem;"><strong>영양 성분 기반 칼로리 추정: {corrected_kcal:.2f} kcal</strong></p>
+                    </div>
+                """, unsafe_allow_html=True)
+                
             else:
                 st.warning("⚠️ 일부 영양성분이 누락되어 kcal 보정이 불가능합니다.")
 
-            # 피드백 출력
-            st.markdown("### 💪 운동 후 섭취 시 장점")
-            st.write(extract_section(finish, "💡 운동 후 섭취 시 장점", "⚠️ 주의사항"))
+            # --- [수정 시작: 장점과 주의사항 가독성 개선 (글꼴 크기, 줄 간격 조정)] ---
 
-            st.markdown("### ⚠️ 주의사항")
-            st.write(extract_section(finish, "⚠️ 주의사항"))
+            # 1. 운동 후 섭취 시 장점 (제목과 내용 모두를 커스텀 카드 안에 포함)
+            advantage_content = extract_section(finish, "💡 운동 후 섭취 시 장점:", "⚠️ 주의사항:")
+            st.markdown(f"""
+                <div class="custom-card">
+                    <h3 style="margin-bottom: 0.5rem; color: var(--primary-color);">💪 운동 후 섭취 시 장점</h3>
+                    <hr style="border-top: 1px solid var(--border-color); margin: 0.5rem 0 1rem 0;">
+                    <p style="white-space: pre-wrap; font-size: 1.1rem; line-height: 1.6;">{advantage_content}</p>
+                </div>
+            """, unsafe_allow_html=True)
+
+            # 2. 주의사항 (제목과 내용 모두를 커스텀 카드 안에 포함)
+            precaution_content = extract_section(finish, "⚠️ 주의사항:")
+            st.markdown(f"""
+                <div class="custom-card">
+                    <h3 style="margin-bottom: 0.5rem; color: var(--accent-color);">⚠️ 주의사항</h3>
+                    <hr style="border-top: 1px solid var(--border-color); margin: 0.5rem 0 1rem 0;">
+                    <p style="white-space: pre-wrap; font-size: 1.1rem; line-height: 1.6;">{precaution_content}</p>
+                </div>
+            """, unsafe_allow_html=True)
+            # --- [수정 끝] ---
+
+# 이 스크립트를 메인으로 실행할 때 run_img() 함수를 호출합니다.
+if __name__ == "__main__":
+    # Streamlit 앱의 기본 스타일링을 위한 더미 코드 (원본 코드에 없어서 추가)
+    st.set_page_config(page_title="AI 영양 분석기", layout="wide")
+    
+    # 사용자 정의 CSS (원본 코드에 없어서 추가 - 카드 스타일을 위해)
+    st.markdown("""
+        <style>
+        :root {
+            --primary-color: #4CAF50;
+            --secondary-color: #FFC107;
+            --accent-color: #E91E63;
+            --text-color: #333333;
+            --card-bg: #f9f9f9;
+            --border-color: #eeeeee;
+        }
+        [data-theme="dark"] {
+            --primary-color: #66BB6A;
+            --secondary-color: #FFD54F;
+            --accent-color: #F06292;
+            --text-color: #FAFAFA;
+            --card-bg: #2d2d2d;
+            --border-color: #3d3d3d;
+        }
+        .custom-card {
+            background-color: var(--card-bg);
+            padding: 1.5rem;
+            border-radius: 10px;
+            border: 1px solid var(--border-color);
+            margin-bottom: 1.5rem;
+        }
+        </style>
+    """, unsafe_allow_html=True)
+
+    run_img()
