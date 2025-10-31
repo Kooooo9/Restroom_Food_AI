@@ -331,7 +331,7 @@ def main():
             <div class="custom-card">
                 <div style="display: flex; align-items: start;">
                     <div style="background-color: var(--primary-color); color: white; padding: 1rem; border-radius: 12px; margin-right: 1rem;">
-                        🤖
+                        🍱
                     </div>
                     <div>
                         <h3 style="margin: 0;">AI 맞춤 추천</h3>
