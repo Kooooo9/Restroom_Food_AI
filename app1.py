@@ -263,8 +263,8 @@ def main():
         with col2:
             st.markdown("""
             <div class="custom-card" style="text-align: center;">
-                <h3 style="color: var(--accent-color); font-size: 2.5rem; margin: 0;">24/7</h3>
-                <p style="margin: 0;">AI 분석 가능</p>
+                <h3 style="color: var(--accent-color); font-size: 2.5rem; margin: 0;">📷</h3>
+                <p style="margin: 0;">AI 음식 사진 분석</p>
             </div>
             """, unsafe_allow_html=True)
             
@@ -272,7 +272,7 @@ def main():
             st.markdown("""
             <div class="custom-card" style="text-align: center;">
                 <h3 style="color: var(--primary-color); font-size: 2.5rem; margin: 0;">100%</h3>
-                <p style="margin: 0;">맞춤형 추천</p>
+                <p style="margin: 0;">AI 맞춤형 추천</p>
             </div>
             """, unsafe_allow_html=True)
         
