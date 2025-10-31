@@ -6,6 +6,7 @@ from PIL import Image
 # GradientBoostingRegressor를 사용하도록 import
 from sklearn.ensemble import GradientBoostingRegressor 
 import re
+import joblib
 
 # =S=======================================================================
 # 1. 환경 설정 및 헬퍼 함수
@@ -44,23 +45,12 @@ def extract_section(text, start, end_marker=None):
         end_idx = len(text)
     return text[start_idx:end_idx].strip()
 
-def train_regression_model():
-    """Gradient Boosting Regressor 모델을 학습시킵니다."""
-    try:
-        # food1.csv 파일 경로가 현재 디렉토리에 있다고 가정
-        # streamlit cloud 배포 시 경로 문제 방지를 위해 os.path.join 사용 고려
-        base_dir = os.path.dirname(__file__)
-        file_path = os.path.join(base_dir, "food1.csv")
-        df = pd.read_csv(file_path)
-    except FileNotFoundError:
-        st.error("❌ food1.csv 파일을 찾을 수 없습니다. 파일이 앱의 루트 디렉토리에 있는지 확인해주세요.")
-        return None
-        
-    X = df[["탄수화물(g)", "단백질(g)", "지방(g)", "당류(g)", "나트륨(mg)"]]
-    y = df["에너지(kcal)"]
-    
-    # GradientBoostingRegressor 사용 및 학습
-    model = GradientBoostingRegressor(n_estimators=100, learning_rate=0.1, max_depth=3).fit(X, y)
+def load_regression_model():
+    base_dir = os.path.dirname(__file__)
+    model_path = os.path.join(base_dir, "food_calorie_model.pkl")     # 또는 "model.joblib"
+    if not os.path.exists(model_path):
+        raise FileNotFoundError("사전 학습된 모델 파일(food_calorie_model.pkl)이 없습니다. 먼저 py에서 모델을 학습 및 저장하세요.")
+    model = joblib.load(model_path)
     return model
 
 # =========================================================================
@@ -78,11 +68,7 @@ def run_img():
         </div>
     """, unsafe_allow_html=True)
 
-    # 1. 모델 및 데이터 로드
-    regressor = train_regression_model()
-    if regressor is None:
-        # 데이터 로드 오류는 train_regression_model 내부에서 이미 출력됨
-        return
+
 
     # 2. 파일 업로드 및 사용자 입력
     st.markdown("""
