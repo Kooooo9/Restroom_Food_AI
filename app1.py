@@ -65,22 +65,34 @@ def apply_custom_css():
         
         /* Button styling */
         .stButton > button {
-            background-color: var(--primary-color);
+            background-color: #3498DB;
             color: white;
             border: none;
-            border-radius: 8px;
+            border-radius: 12px;
             padding: 0.75rem 1.5rem;
             font-weight: 600;
             transition: all 0.3s ease;
-            text-transform: uppercase;
             letter-spacing: 0.5px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 8px rgba(52, 152, 219, 0.3);
         }
         
         .stButton > button:hover {
-            background-color: var(--button-hover);
-            transform: translateY(-2px);
-            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            background-color: #2980B9;
+            transform: translateX(4px);
+            box-shadow: 0 4px 12px rgba(52, 152, 219, 0.4);
+        }
+        
+        /* Active/Selected button styling */
+        .stButton > button[kind="primary"] {
+            background: linear-gradient(135deg, #ff6b35 0%, #ff8c42 100%);
+            box-shadow: 0 4px 12px rgba(255, 107, 53, 0.4);
+            transform: translateX(4px);
+        }
+        
+        .stButton > button[kind="primary"]:hover {
+            background: linear-gradient(135deg, #ff8c42 0%, #ffa35c 100%);
+            transform: translateX(6px);
+            box-shadow: 0 6px 16px rgba(255, 107, 53, 0.5);
         }
         
         /* Card styling */
@@ -222,7 +234,7 @@ def main():
                 type="secondary" if item != choice else "primary"
             ):
                 st.session_state.menu_choice = item
-                choice = item
+                st.rerun()
         
         st.markdown('<div class="divider"></div>', unsafe_allow_html=True)
         
