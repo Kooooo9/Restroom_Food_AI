@@ -6,9 +6,10 @@ import google.generativeai as genai
 # get_bmi_criteria를 추가하여 나이별 기준을 사용할 수 있게 합니다.
 from app_user_info import get_user_data, get_bmi_criteria 
 
-# Gemini API 설정
-GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")  # 실제 API 키로 교체 필요
-genai.configure(api_key=GOOGLE_API_KEY)
+
+# 제미나이 API 키 불러오기
+api_key=st.secrets["GEMINI_API_KEY"]
+genai.configure(api_key=api_key)
 model = genai.GenerativeModel('gemini-2.5-flash')
 
 
