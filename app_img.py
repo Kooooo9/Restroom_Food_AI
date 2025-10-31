@@ -67,7 +67,11 @@ def run_img():
             </p>
         </div>
     """, unsafe_allow_html=True)
-
+    try:
+        regressor = load_regression_model()     # 이 부분이 반드시 필요
+    except FileNotFoundError as e:
+        st.error(f"❌ {e}")
+        return
 
 
     # 2. 파일 업로드 및 사용자 입력
