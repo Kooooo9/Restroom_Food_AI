@@ -4,7 +4,7 @@ seaborn
 numpy
 
 
-google-genai
+google-generativeai
 plotly
 
 # --- 이미지 처리 ---
