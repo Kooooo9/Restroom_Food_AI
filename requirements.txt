@@ -1,10 +1,9 @@
 streamlit
 seaborn
-jupyter
+
 numpy
-matplotlib
-os
-google
+
+
 google-genai
 plotly
 
